@@ -1,0 +1,239 @@
+name: Daily Build, Scan, and Publish
+
+on:
+  schedule:
+    # Daily rebuild at 04:17 UTC to pick up Debian 13 (trixie)
+    # security updates, Node.js LTS point releases, and npm dependency fixes.
+    - cron: '17 4 * * *'
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      node_version:
+        description: 'Override Node.js LTS version (leave empty for latest active LTS on trixie-slim)'
+        required: false
+        default: ''
+      flame_commit:
+        description: 'Override upstream Flame-Revamped git commit SHA (leave empty for Dockerfile default)'
+        required: false
+        default: ''
+      force_push:
+        description: 'Push even if only docs changed (requires Docker Hub secrets)'
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+  security-events: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  IMAGE_NAME: dgcosenza/flame
+  FLAME_VERSION: '2.1.0'
+  FLAME_COMMIT_DEFAULT: '0d6221d8ff4c800a93d6e42557ac16658ebaa6d5'
+
+jobs:
+  build-scan-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Resolve latest Node.js LTS on Debian 13 (trixie-slim)
+        id: resolve
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          FLAME_COMMIT="${{ inputs.flame_commit }}"
+          if [ -z "$FLAME_COMMIT" ]; then
+            FLAME_COMMIT="${FLAME_COMMIT_DEFAULT}"
+          fi
+          SHORT_COMMIT="${FLAME_COMMIT:0:8}"
+
+          NODE_VERSION="${{ inputs.node_version }}"
+          if [ -z "$NODE_VERSION" ]; then
+            # Query nodejs.org for the newest active LTS release that already
+            # has an official `node:<ver>-trixie-slim` tag published on Docker Hub.
+            CANDIDATES=$(curl -fsSL https://nodejs.org/dist/index.json | python3 -c "
+          import sys, json
+          releases = json.load(sys.stdin)
+          lts = [r['version'].lstrip('v') for r in releases if r.get('lts')]
+          print('\n'.join(lts[:8]))
+          ")
+            for cand in $CANDIDATES; do
+              if curl -fsSL "https://hub.docker.com/v2/repositories/library/node/tags/${cand}-trixie-slim" >/dev/null 2>&1; then
+                NODE_VERSION="$cand"
+                break
+              fi
+            done
+          fi
+
+          if [ -z "$NODE_VERSION" ]; then
+            echo "ERROR: Could not resolve a published Node LTS trixie-slim tag" >&2
+            exit 1
+          fi
+
+          BUILD_DATE=$(date -u +"%Y%m%d")
+          CREATED=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          echo "node_version=${NODE_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "flame_commit=${FLAME_COMMIT}" >> "$GITHUB_OUTPUT"
+          echo "short_commit=${SHORT_COMMIT}" >> "$GITHUB_OUTPUT"
+          echo "build_date=${BUILD_DATE}" >> "$GITHUB_OUTPUT"
+          echo "created=${CREATED}" >> "$GITHUB_OUTPUT"
+
+          echo "Resolved Node LTS: ${NODE_VERSION}-trixie-slim"
+          echo "Pinned Flame-Revamped commit: ${FLAME_COMMIT} (v${FLAME_VERSION})"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build local linux/amd64 image (includes npm update, npm audit=0, npm test, typecheck, Vite build)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          no-cache: ${{ github.event_name == 'schedule' }}
+          tags: |
+            ${{ env.IMAGE_NAME }}:ci-candidate
+          build-args: |
+            NODE_VERSION=${{ steps.resolve.outputs.node_version }}
+            FLAME_VERSION=${{ env.FLAME_VERSION }}
+            FLAME_COMMIT=${{ steps.resolve.outputs.flame_commit }}
+            IMAGE_CREATED=${{ steps.resolve.outputs.created }}
+            IMAGE_REVISION=${{ github.sha }}
+            IMAGE_SOURCE=https://github.com/${{ github.repository }}
+
+      - name: Smoke-test container startup, /health endpoint, and non-root execution
+        shell: bash
+        run: |
+          set -euo pipefail
+          TMPDATA=$(mktemp -d)
+          chmod 777 "$TMPDATA"
+          docker run -d --name flame-ci-smoke \
+            --security-opt no-new-privileges:true \
+            -p 127.0.0.1:15005:5005 \
+            -e PASSWORD="ci-smoke-test-password-only" \
+            -v "${TMPDATA}:/app/data" \
+            "${IMAGE_NAME}:ci-candidate"
+
+          trap 'docker rm -f flame-ci-smoke >/dev/null 2>&1 || true; rm -rf "$TMPDATA"' EXIT
+
+          # Verify non-root UID 1000
+          UID_ACTUAL=$(docker exec flame-ci-smoke id -u)
+          test "$UID_ACTUAL" = "1000"
+
+          # Wait for /health 200 and built-in healthcheck.js
+          for i in $(seq 1 30); do
+            if docker exec flame-ci-smoke node /app/healthcheck.js; then
+              break
+            fi
+            sleep 1
+          done
+          docker exec flame-ci-smoke node /app/healthcheck.js
+
+          # Prove healthcheck fails on a dead port
+          if docker exec -e PORT=5999 flame-ci-smoke node /app/healthcheck.js; then
+            echo "ERROR: healthcheck unexpectedly passed on dead port 5999" >&2
+            exit 1
+          fi
+
+          # Verify HTTP 200 on / and /health
+          curl -fsS http://127.0.0.1:15005/ | grep -q "<title>Flame</title>"
+          curl -fsS http://127.0.0.1:15005/health | grep -q '"status":"healthy"'
+
+          # Verify data/.secret created with strict mode 0600
+          SECRET_MODE=$(stat -c '%a' "${TMPDATA}/.secret")
+          test "$SECRET_MODE" = "600"
+
+          echo "Smoke test passed (uid=${UID_ACTUAL}, secret_mode=${SECRET_MODE})."
+
+      - name: Scan image with Trivy — full report (informational)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: '${{ env.IMAGE_NAME }}:ci-candidate'
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '0'
+
+      - name: Scan image with Trivy — HARD GATE (fail on any fixable CRITICAL or HIGH)
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: '${{ env.IMAGE_NAME }}:ci-candidate'
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          exit-code: '1'
+
+      - name: Check Docker Hub publish credentials
+        id: hub_auth
+        shell: bash
+        env:
+          DH_USER: ${{ secrets.DOCKERHUB_USERNAME }}
+          DH_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          if [ "${{ github.event_name }}" != "pull_request" ] && [ -n "$DH_USER" ] && [ -n "$DH_TOKEN" ]; then
+            echo "can_publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "can_publish=false" >> "$GITHUB_OUTPUT"
+            echo "Skipping Docker Hub push (PR event or DOCKERHUB_USERNAME/DOCKERHUB_TOKEN not configured)."
+          fi
+
+      - name: Log in to Docker Hub
+        if: steps.hub_auth.outputs.can_publish == 'true'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Tag and push verified image to Docker Hub
+        if: steps.hub_auth.outputs.can_publish == 'true'
+        id: push
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMMUTABLE_TAG="${IMAGE_NAME}:${FLAME_VERSION}-${{ steps.resolve.outputs.short_commit }}-${{ steps.resolve.outputs.build_date }}"
+          COMMIT_TAG="${IMAGE_NAME}:${FLAME_VERSION}-${{ steps.resolve.outputs.short_commit }}"
+          VERSION_TAG="${IMAGE_NAME}:${FLAME_VERSION}"
+          LATEST_TAG="${IMAGE_NAME}:latest"
+
+          for tag in "$IMMUTABLE_TAG" "$COMMIT_TAG" "$VERSION_TAG" "$LATEST_TAG"; do
+            docker tag "${IMAGE_NAME}:ci-candidate" "$tag"
+            docker push "$tag"
+          done
+
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$LATEST_TAG")
+          echo "Published digest: ${DIGEST}"
+          echo "digest=${DIGEST}" >> "$GITHUB_OUTPUT"
+
+      - name: Read Docker Hub short description
+        if: steps.hub_auth.outputs.can_publish == 'true'
+        id: short_desc
+        shell: bash
+        run: |
+          DESC=$(tr -d '\r\n' < DOCKERHUB_SHORT_DESCRIPTION)
+          if [ "${#DESC}" -gt 100 ]; then
+            echo "ERROR: DOCKERHUB_SHORT_DESCRIPTION exceeds 100 characters (${#DESC})" >&2
+            exit 1
+          fi
+          echo "text=${DESC}" >> "$GITHUB_OUTPUT"
+
+      - name: Sync Docker Hub repository overview (short & full description)
+        if: steps.hub_auth.outputs.can_publish == 'true'
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ env.IMAGE_NAME }}
+          short-description: ${{ steps.short_desc.outputs.text }}
+          readme-filepath: ./README.md

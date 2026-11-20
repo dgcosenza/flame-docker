@@ -1,0 +1,7 @@
+*
+!Dockerfile
+!healthcheck.js
+!patches/
+!patches/**
+!tests/
+!tests/**
