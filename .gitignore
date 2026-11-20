@@ -1,0 +1,19 @@
+# Local task-runner & operational artifacts (never commit to public repo)
+AGENTS.md
+BRIEF.md
+NOTICE-*.md
+PROGRESS.md
+PROMPT-*.txt
+REPORT.md
+logs/
+out/
+tools/
+
+# Editor / OS / local build junk
+.DS_Store
+*.bak
+*.bak-*
+.env
+.env.local
+node_modules/
+data/

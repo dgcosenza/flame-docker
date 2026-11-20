@@ -1,0 +1,195 @@
+diff --git a/controllers/apps/createApp.js b/controllers/apps/createApp.js
+index e0f6b6a..8475196 100644
+--- a/controllers/apps/createApp.js
++++ b/controllers/apps/createApp.js
+@@ -5,13 +5,30 @@ const { isDangerousUrl } = require('../../utils/urlSafety');
+ const loadConfig = require('../../utils/loadConfig');
+ const runStatusChecks = require('../../utils/runStatusChecks');
+ 
++const ALLOWED_APP_FIELDS = [
++  'name',
++  'url',
++  'icon',
++  'isPinned',
++  'orderId',
++  'isPublic',
++  'description',
++  'statusCheckEnabled',
++  'statusCheckUrl',
++];
++
++const pickFields = (src, allowed) =>
++  Object.fromEntries(
++    Object.entries(src || {}).filter(([k]) => allowed.includes(k))
++  );
++
+ // @desc      Create new app
+ // @route     POST /api/apps
+ // @access    Public
+ const createApp = asyncWrapper(async (req, res, next) => {
+   const { pinAppsByDefault } = await loadConfig();
+ 
+-  let body = { ...req.body };
++  let body = pickFields(req.body, ALLOWED_APP_FIELDS);
+ 
+   if (isDangerousUrl(body.url) || isDangerousUrl(body.statusCheckUrl)) {
+     return next(new ErrorResponse('Invalid URL scheme', 400));
+diff --git a/controllers/apps/updateApp.js b/controllers/apps/updateApp.js
+index a74965b..fa51295 100644
+--- a/controllers/apps/updateApp.js
++++ b/controllers/apps/updateApp.js
+@@ -4,6 +4,23 @@ const ErrorResponse = require('../../utils/ErrorResponse');
+ const { isDangerousUrl } = require('../../utils/urlSafety');
+ const runStatusChecks = require('../../utils/runStatusChecks');
+ 
++const ALLOWED_APP_FIELDS = [
++  'name',
++  'url',
++  'icon',
++  'isPinned',
++  'orderId',
++  'isPublic',
++  'description',
++  'statusCheckEnabled',
++  'statusCheckUrl',
++];
++
++const pickFields = (src, allowed) =>
++  Object.fromEntries(
++    Object.entries(src || {}).filter(([k]) => allowed.includes(k))
++  );
++
+ // Accept the value the form sends in any shape (boolean, 1/0 number, '1'/'0' string).
+ const isTruthyFlag = (v) => v === true || v === 1 || v === '1';
+ 
+@@ -24,7 +41,7 @@ const updateApp = asyncWrapper(async (req, res, next) => {
+     );
+   }
+ 
+-  let body = { ...req.body };
++  let body = pickFields(req.body, ALLOWED_APP_FIELDS);
+ 
+   if (isDangerousUrl(body.url) || isDangerousUrl(body.statusCheckUrl)) {
+     return next(new ErrorResponse('Invalid URL scheme', 400));
+diff --git a/controllers/bookmarks/createBookmark.js b/controllers/bookmarks/createBookmark.js
+index 939ffcd..8dabe1a 100644
+--- a/controllers/bookmarks/createBookmark.js
++++ b/controllers/bookmarks/createBookmark.js
+@@ -3,6 +3,20 @@ const Bookmark = require('../../models/Bookmark');
+ const ErrorResponse = require('../../utils/ErrorResponse');
+ const { isDangerousUrl } = require('../../utils/urlSafety');
+ 
++const ALLOWED_BOOKMARK_FIELDS = [
++  'name',
++  'url',
++  'categoryId',
++  'icon',
++  'isPublic',
++  'orderId',
++];
++
++const pickFields = (src, allowed) =>
++  Object.fromEntries(
++    Object.entries(src || {}).filter(([k]) => allowed.includes(k))
++  );
++
+ // @desc      Create new bookmark
+ // @route     POST /api/bookmarks
+ // @access    Public
+@@ -14,7 +28,7 @@ const createBookmark = asyncWrapper(async (req, res, next) => {
+   }
+ 
+   let body = {
+-    ...req.body,
++    ...pickFields(req.body, ALLOWED_BOOKMARK_FIELDS),
+     categoryId: parseInt(req.body.categoryId),
+   };
+ 
+diff --git a/controllers/bookmarks/updateBookmark.js b/controllers/bookmarks/updateBookmark.js
+index 8960244..04a481b 100644
+--- a/controllers/bookmarks/updateBookmark.js
++++ b/controllers/bookmarks/updateBookmark.js
+@@ -3,6 +3,20 @@ const ErrorResponse = require('../../utils/ErrorResponse');
+ const Bookmark = require('../../models/Bookmark');
+ const { isDangerousUrl } = require('../../utils/urlSafety');
+ 
++const ALLOWED_BOOKMARK_FIELDS = [
++  'name',
++  'url',
++  'categoryId',
++  'icon',
++  'isPublic',
++  'orderId',
++];
++
++const pickFields = (src, allowed) =>
++  Object.fromEntries(
++    Object.entries(src || {}).filter(([k]) => allowed.includes(k))
++  );
++
+ // @desc      Update bookmark
+ // @route     PUT /api/bookmarks/:id
+ // @access    Public
+@@ -25,7 +39,7 @@ const updateBookmark = asyncWrapper(async (req, res, next) => {
+   }
+ 
+   let body = {
+-    ...req.body,
++    ...pickFields(req.body, ALLOWED_BOOKMARK_FIELDS),
+     categoryId: parseInt(req.body.categoryId),
+   };
+ 
+diff --git a/controllers/categories/createCategory.js b/controllers/categories/createCategory.js
+index ada5645..a0fc677 100644
+--- a/controllers/categories/createCategory.js
++++ b/controllers/categories/createCategory.js
+@@ -2,6 +2,13 @@ const asyncWrapper = require('../../middleware/asyncWrapper');
+ const Category = require('../../models/Category');
+ const loadConfig = require('../../utils/loadConfig');
+ 
++const ALLOWED_CATEGORY_FIELDS = ['name', 'isPinned', 'orderId', 'isPublic'];
++
++const pickFields = (src, allowed) =>
++  Object.fromEntries(
++    Object.entries(src || {}).filter(([k]) => allowed.includes(k))
++  );
++
+ // @desc      Create new category
+ // @route     POST /api/categories
+ // @access    Public
+@@ -9,7 +16,7 @@ const createCategory = asyncWrapper(async (req, res, next) => {
+   const { pinCategoriesByDefault: pinCategories } = await loadConfig();
+ 
+   const category = await Category.create({
+-    ...req.body,
++    ...pickFields(req.body, ALLOWED_CATEGORY_FIELDS),
+     isPinned: pinCategories,
+   });
+ 
+diff --git a/controllers/categories/updateCategory.js b/controllers/categories/updateCategory.js
+index cc43db6..e209bf6 100644
+--- a/controllers/categories/updateCategory.js
++++ b/controllers/categories/updateCategory.js
+@@ -2,6 +2,13 @@ const asyncWrapper = require('../../middleware/asyncWrapper');
+ const ErrorResponse = require('../../utils/ErrorResponse');
+ const Category = require('../../models/Category');
+ 
++const ALLOWED_CATEGORY_FIELDS = ['name', 'isPinned', 'orderId', 'isPublic'];
++
++const pickFields = (src, allowed) =>
++  Object.fromEntries(
++    Object.entries(src || {}).filter(([k]) => allowed.includes(k))
++  );
++
+ // @desc      Update category
+ // @route     PUT /api/categories/:id
+ // @access    Public
+@@ -19,7 +26,7 @@ const updateCategory = asyncWrapper(async (req, res, next) => {
+     );
+   }
+ 
+-  category = await category.update({ ...req.body });
++  category = await category.update(pickFields(req.body, ALLOWED_CATEGORY_FIELDS));
+ 
+   res.status(200).json({
+     success: true,

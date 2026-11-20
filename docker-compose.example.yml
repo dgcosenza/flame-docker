@@ -1,0 +1,43 @@
+# Production-style LAN-only Docker Compose example for dgcosenza/flame
+# Replace 192.168.1.101 with your host's LAN IP address and pin by @sha256 digest.
+
+services:
+  flame:
+    image: dgcosenza/flame:latest
+    container_name: flame
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    ports:
+      # Bind to your LAN interface only (never 0.0.0.0 unless intentionally proxied)
+      - "192.168.1.101:5005:5005"
+    environment:
+      - NODE_ENV=production
+      - PASSWORD_FILE=/run/secrets/password
+      # Optional:
+      # - PORT=5005
+      # - TRUST_PROXY=1
+      # - CSP=on
+      # - NODE_USE_ENV_PROXY=1
+    secrets:
+      - password
+    volumes:
+      # Must be writable by uid 1000 / gid 1000 (`node`)
+      - ./data:/app/data
+      # Optional persistent access log for fail2ban:
+      # - ./log:/app/log
+    healthcheck:
+      test: ["CMD", "node", "/app/healthcheck.js"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 256M
+
+secrets:
+  password:
+    file: ./secrets/password

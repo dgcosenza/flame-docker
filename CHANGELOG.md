@@ -1,0 +1,26 @@
+# Changelog
+
+All notable changes to the `dgcosenza/flame` Debian 13 / Node LTS container packaging and patches are documented in this file.
+
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Application version numbers track the pinned upstream `AlexStapleton/Flame-Revamped` release.
+
+---
+
+## [2.1.0-0d6221d8] — 2026-11-20
+
+### Added
+- **Hardened Debian 13 (trixie) + Node.js LTS base image**: multi-stage build using official `node:26.13.1-trixie-slim` (Debian 13.7, Node.js v26.13.1 LTS *Lithium*) with `apt-get update && apt-get -y upgrade` applied at build time.
+- **Native `sqlite3` compilation**: rebuilt from source against Debian 13 glibc and the Node.js 26 ABI during the build stage.
+- **Full dependency refresh & zero-CVE build gate**: both server and Vite/React client dependencies are updated (`npm update`) and audited (`npm audit --audit-level=low` = 0 vulnerabilities), client is type-checked (`tsc --noEmit`) and freshly bundled (`vite build`), and the full test suite (`npm test`) runs during image build.
+- **Built-in dependency-free healthcheck (`/app/healthcheck.js`)**: Node.js `http.get` probe against `http://127.0.0.1:${PORT}/health` (verifies HTTP 200, JSON `{"status":"healthy"}`, `data/config.json` readability, and SQLite `SELECT 1`), removing any need for `curl` or `wget` in the runtime image.
+- **Audited FNX Labs patches (`patches/`)**:
+  - `01-secrets-and-startup.patch`: loads `/run/secrets/*` and `PASSWORD_FILE` / `SECRET_FILE` environment variables *before* `SECRET` initialization and `PASSWORD` validation so secret-only deployments start cleanly without plaintext `PASSWORD` env vars.
+  - `02-dot-secret-compat.patch`: preserves seamless compatibility with upstream `pawelmalak/flame` (`data/.secret`) while keeping fallback support for `Flame-Revamped` (`data/secret.key`), and creates new secret files with strict `0600` permissions.
+  - `03-mass-assignment-allowlists.patch`: enforces explicit field allowlists in app, bookmark, and category create/update controllers (mitigating CWE-915 mass assignment).
+- **Compatibility test suite (`tests/fnxCompat.test.js`)**: automated `node:test` coverage for `PASSWORD_FILE`, `data/.secret` precedence, `data/secret.key` fallback, and `0600` secret permissions.
+- **Runtime hardening**: runs as non-root `node` (UID/GID 1000); application code and `/app/public` assets are root-owned and read-only (only `/app/data`, `/app/log`, and `/app/public/flame.css` are writable by UID 1000); build-only package managers (`npm`, `npx`, `corepack`, `yarn`) are stripped from the runtime layer while `/app/package-lock.json` remains intact for transparent vulnerability scanning.
+- **OCI metadata labels**: complete `org.opencontainers.image.*` labels plus `io.fnxlabs.flame.*` build provenance labels (upstream repo, version, commit, Node version).
+- **Daily CI maintenance workflow (`.github/workflows/build-and-publish.yml`)**: scheduled daily rebuilds against the latest Debian 13 security packages, Node LTS point releases, and npm updates; hard-gated on `npm audit` = 0, full unit tests, container smoke tests, and Trivy scanning (0 fixable Critical/High); automatically syncs Docker Hub short and full descriptions on publish.
+
+### Upstream Base
+- Pinned to [`AlexStapleton/Flame-Revamped`](https://github.com/AlexStapleton/Flame-Revamped) **v2.1.0** (`0d6221d8ff4c800a93d6e42557ac16658ebaa6d5`, 2026-11-08), a maintained fork of [`pawelmalak/flame`](https://github.com/pawelmalak/flame) featuring Express 5, Sequelize 6, React 19, Vite 8, TypeScript 7, Content-Security-Policy, DOMPurify SVG sanitization, login rate limiting, timing-safe password comparison, password-bound HS256 JWTs with TTL allowlist, drag-and-drop reordering, backup/restore, app status checks, and optional Pi-hole/Calendar widgets.
