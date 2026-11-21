@@ -6,6 +6,11 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). App
 
 ---
 
+## [2.1.0-0d6221d8-20261121] — 2026-11-21
+
+### Changed
+- Rebuilt the existing v2.1.0 image from the current Debian 13 Trixie / Node.js 26 LTS base, refreshing Debian and npm dependencies and rerunning the project tests, audits, and image scans. The upstream application release and source commit remain unchanged.
+
 ## [2.1.0-0d6221d8] — 2026-11-20
 
 ### Added
