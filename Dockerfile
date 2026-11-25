@@ -24,7 +24,7 @@ RUN git init \
     && test "$(git rev-parse HEAD)" = "${FLAME_COMMIT}"
 
 COPY patches/ /tmp/patches/
-COPY tests/fnxCompat.test.js /src/test/fnxCompat.test.js
+COPY tests/compat.test.js /src/test/compat.test.js
 
 RUN set -e; for p in /tmp/patches/*.patch; do \
       echo "Applying patch: $p"; \
@@ -76,7 +76,7 @@ ARG IMAGE_REVISION=""
 ARG IMAGE_SOURCE="https://github.com/dgcosenza/flame-docker"
 
 LABEL org.opencontainers.image.title="Flame (Debian 13 / Node LTS)" \
-      org.opencontainers.image.description="Hardened, up-to-date Debian 13 (trixie) and Node LTS container image for Flame self-hosted startpage, maintained by FNX Labs." \
+      org.opencontainers.image.description="Hardened, up-to-date Debian 13 (trixie) and Node LTS container image for Flame self-hosted startpage, maintained by dgcosenza." \
       org.opencontainers.image.url="https://hub.docker.com/r/dgcosenza/flame" \
       org.opencontainers.image.source="${IMAGE_SOURCE}" \
       org.opencontainers.image.documentation="${IMAGE_SOURCE}#readme" \
@@ -84,7 +84,7 @@ LABEL org.opencontainers.image.title="Flame (Debian 13 / Node LTS)" \
       org.opencontainers.image.revision="${IMAGE_REVISION}" \
       org.opencontainers.image.created="${IMAGE_CREATED}" \
       org.opencontainers.image.licenses="MIT" \
-      org.opencontainers.image.vendor="FNX Labs" \
+      org.opencontainers.image.vendor="dgcosenza" \
       org.opencontainers.image.authors="Daniel Cosenza (dgcosenza)" \
       io.github.dgcosenza.flame.upstream_repo="${FLAME_REPO}" \
       io.github.dgcosenza.flame.upstream_version="${FLAME_VERSION}" \

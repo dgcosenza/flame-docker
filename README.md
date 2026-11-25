@@ -1,6 +1,6 @@
 # Flame — Hardened Debian 13 (trixie) / Node.js LTS Image
 
-A hardened, actively maintained container image for **Flame** (self-hosted startpage and dashboard), built on **Debian 13 (trixie)** and the **latest active Node.js LTS** runtime by **FNX Labs** (`dgcosenza`).
+A hardened, actively maintained container image for **Flame** (self-hosted startpage and dashboard), built on **Debian 13 (trixie)** and the **latest active Node.js LTS** runtime, maintained by `dgcosenza`.
 
 - **Docker Hub:** [`dgcosenza/flame`](https://hub.docker.com/r/dgcosenza/flame)
 - **Source Repository:** [`dgcosenza/flame-docker`](https://github.com/dgcosenza/flame-docker)
@@ -13,12 +13,12 @@ A hardened, actively maintained container image for **Flame** (self-hosted start
 
 The official [`pawelmalak/flame`](https://github.com/pawelmalak/flame) `v2.4.0` image ships end-of-life Node.js 20 on Alpine alongside outdated dependencies (deprecated `react-scripts` 5, legacy `multer` 1.x, `axios` 0.24, `jsonwebtoken` 8.x, `express` 4.17) and unpatched application security issues.
 
-`dgcosenza/flame`, maintained by **FNX Labs** (`dgcosenza`), provides a drop-in, production-hardened Flame image on **Debian 13 (trixie)** + **Node.js 26 LTS (*Lithium*)**:
+`dgcosenza/flame`, maintained by `dgcosenza`, provides a drop-in, production-hardened Flame image on **Debian 13 (trixie)** + **Node.js 26 LTS (*Lithium*)**:
 
 - **Maintained application base:** Built from a commit-pinned checkout of [`AlexStapleton/Flame-Revamped`](https://github.com/AlexStapleton/Flame-Revamped) (`v2.1.0`, commit `0d6221d8`), modernizing Flame to **Express 5**, **Sequelize 6**, **sqlite3 6** (bundled SQLite 3.52), **React 19**, **Vite 8**, and **TypeScript 7** with 250+ automated tests and XSS/CSP/auth hardening while preserving the classic Flame layout and SQLite data model.
-- **Current OS and runtime:** Based on official `node:26.13.1-trixie-slim` (Debian 13.7), upgraded via `apt-get update && apt-get -y upgrade` at build time, with native `sqlite3` compiled from source against Debian 13 glibc and Node 26.
+- **Current OS and runtime:** Based on official `node:<LTS>-trixie-slim` (latest Debian 13 point release, 13.8 as of 2026-11-24), upgraded via `apt-get update && apt-get -y upgrade` at build time, with native `sqlite3` compiled from source against Debian 13 glibc and Node 26.
 - **Zero-vulnerability build gates:** Both server and frontend dependencies are updated at build time, the Vite frontend is rebuilt from source, all unit tests run during build, `npm audit --audit-level=low` must report **0 vulnerabilities** on client and server, and Trivy must report **0 fixable Critical or High** vulnerabilities before publication.
-- **Audited FNX Labs patches (`patches/`):**
+- **Audited packaging patches (`patches/`):**
   1. `01-secrets-and-startup.patch` — Loads `/run/secrets/*` and `PASSWORD_FILE` / `SECRET_FILE` before secret initialization and password validation, supporting secret-only deployments without plaintext `PASSWORD` env vars.
   2. `02-dot-secret-compat.patch` — Preserves `pawelmalak/flame`'s `data/.secret` (with fallback to `Flame-Revamped`'s `data/secret.key`) and writes newly generated secret files with mode `0600`.
   3. `03-mass-assignment-allowlists.patch` — Enforces explicit field allowlists in app, bookmark, and category create/update controllers (mitigating CWE-915).
@@ -150,6 +150,8 @@ At startup, `/run/secrets/*` files are loaded into uppercase environment variabl
 ---
 
 ## Ports and Network Exposure
+
+> Examples use `192.0.2.10` (an RFC 5737 documentation address) as the host LAN IP; replace it with your own.
 
 Flame listens on container port **`5005/tcp`** (HTTP UI, REST API `/api/*`, `/health`, and WebSocket `/socket`).
 
@@ -316,7 +318,7 @@ docker buildx build \
 | `IMAGE_REVISION` | `""` | Packaging repo Git SHA. |
 | `IMAGE_SOURCE` | `https://github.com/dgcosenza/flame-docker` | Source URL for OCI labels. |
 
-**Multi-stage build:** (1) `source` clones and verifies `FLAME_COMMIT`, applies `patches/*.patch`, and adds `tests/fnxCompat.test.js`; (2) `client-builder` runs `npm update`, `npm audit --audit-level=low`, `tsc --noEmit`, and `vite build` (with `.br`/`.gz` assets); (3) `server-builder` updates deps, compiles native `sqlite3` from source, runs `npm test` (250+ tests), prunes devDeps, and enforces `npm audit --omit=dev --audit-level=low`; (4) `runtime` upgrades Debian 13 (`apt-get upgrade`), strips `npm`/`npx`/`corepack`/`yarn`, copies production artifacts, sets UID 1000 ownership on writable paths only, and runs as `USER node`.
+**Multi-stage build:** (1) `source` clones and verifies `FLAME_COMMIT`, applies `patches/*.patch`, and adds `tests/compat.test.js`; (2) `client-builder` runs `npm update`, `npm audit --audit-level=low`, `tsc --noEmit`, and `vite build` (with `.br`/`.gz` assets); (3) `server-builder` updates deps, compiles native `sqlite3` from source, runs `npm test` (250+ tests), prunes devDeps, and enforces `npm audit --omit=dev --audit-level=low`; (4) `runtime` upgrades Debian 13 (`apt-get upgrade`), strips `npm`/`npx`/`corepack`/`yarn`, copies production artifacts, sets UID 1000 ownership on writable paths only, and runs as `USER node`.
 
 ---
 
@@ -358,4 +360,4 @@ Released under the [MIT License](https://github.com/dgcosenza/flame-docker/blob/
 
 - **Flame:** Created by [Paweł Malak](https://github.com/pawelmalak/flame) and contributors.
 - **Flame Revamped:** Maintained by [Alex Stapleton](https://github.com/AlexStapleton/Flame-Revamped).
-- **Debian 13 / Node LTS packaging, patches, and CI:** Maintained by **Daniel Cosenza / FNX Labs** (`dgcosenza`).
+- **Debian 13 / Node LTS packaging, patches, and CI:** Maintained by **Daniel Cosenza** (`dgcosenza`).
