@@ -5,6 +5,12 @@ All notable changes to the `dgcosenza/flame` Debian 13 / Node LTS container pack
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Application version numbers track the pinned upstream `AlexStapleton/Flame-Revamped` release. Maintained by **Daniel G. Cosenza from FNX Labs**.
 
 ---
+
+## [Unreleased]
+
+### Documentation
+- Reduced the README below Docker Hub's 25,000-byte overview limit so the overview is no longer truncated; long procedures moved to `docs/` (migration, backup and restore, building from source, update policy, troubleshooting).
+
 <!-- changelog:auto -->
 
 ## [2.1.0-0d6221d8] — 2026-11-25

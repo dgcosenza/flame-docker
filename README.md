@@ -235,72 +235,21 @@ All settings are managed in the web UI (**Settings**, bottom-left gear icon):
 
 ## Upgrading and Migrating from `pawelmalak/flame`
 
-This image is a data-compatible upgrade from `pawelmalak/flame` (`v2.3.x` / `v2.4.0`).
+This image is a data-compatible upgrade from `pawelmalak/flame` (`v2.3.x` / `v2.4.0`). It reuses `data/.secret`, preserves `config.json`, and applies four additive, reversible SQLite migrations (`06_indexes.js` to `09_weather-details.js`) after saving an automatic backup in `data/db_backups/`.
 
-### Compatibility Summary
+Key points (full step-by-step cutover, verification and rollback in [`docs/MIGRATION.md`](https://github.com/dgcosenza/flame-docker/blob/main/docs/MIGRATION.md)):
 
-- **SQLite schema:** `pawelmalak/flame` v2.4.0 ends at migration `05_app-description.js`. On first boot, `dgcosenza/flame` saves an automatic backup in `data/db_backups/` and runs four **additive, reversible** migrations (`06_indexes.js` through `09_weather-details.js`) adding one bookmark index and nullable columns for app status, sync source, and weather details. All four migrations implement `down()` and preserve existing apps, categories, and bookmarks verbatim. Even so, keep a full pre-upgrade copy of `data/` for instant rollback.
-- **`data/.secret`:** Existing `data/.secret` files from `pawelmalak/flame` are reused in place (no `secret.key` is created).
-- **One-time re-login:** Legacy JWTs lack the password-fingerprint (`pwf`) claim and must be re-issued once via Settings → App.
-- **`config.json`:** Existing settings are preserved; new optional defaults are appended while new widgets stay dormant until configured.
-- **Healthcheck:** Update Compose `healthcheck.test` from `wget ...` to `["CMD", "node", "/app/healthcheck.js"]`.
-
-### Step-by-Step Cutover
-
-1. **Back up Compose, data, and tag the outgoing image:**
-   ```bash
-   STAMP=$(date +%Y%m%d-%H%M%S)
-   cp -a docker-compose.yml "docker-compose.yml.bak-${STAMP}"
-   cp -a ./data "/path/to/backups/flame-data-pre-upgrade-${STAMP}"
-   docker tag "$(docker inspect -f '{{.Image}}' flame)" "local/flame-rollback:${STAMP}"
-   ```
-2. **Confirm UID `1000` ownership on `./data`:** `ls -lan ./data` (run `chown -R 1000:1000 ./data` if root-owned).
-3. **Pull and retrieve the digest:**
-   ```bash
-   docker pull dgcosenza/flame:latest
-   docker image inspect dgcosenza/flame:latest -f '{{index .RepoDigests 0}}'
-   ```
-4. **Edit `docker-compose.yml`:** set `image: dgcosenza/flame:latest@sha256:<digest>` and `healthcheck.test: ["CMD", "node", "/app/healthcheck.js"]`, keeping `no-new-privileges:true`, LAN-only `ports`, `volumes`, `secrets`, `networks`, and limits intact.
-5. **Validate and recreate only `flame`:**
-   ```bash
-   docker compose config -q && docker compose up -d flame
-   ```
-6. **Verify:**
-   ```bash
-   docker inspect flame --format 'Status={{.State.Status}} Health={{.State.Health.Status}} User={{.Config.User}}'
-   curl -fsS http://192.0.2.10:5005/health
-   for ep in apps categories bookmarks; do
-     printf '%s: ' "$ep"
-     curl -fsS "http://192.0.2.10:5005/api/$ep" | jq '.data | length'
-   done
-   ```
-   Confirm counts match pre-upgrade totals, test admin login with your existing password, and inspect `docker logs flame`.
+- Keep a full copy of `data/` and tag the outgoing image before switching.
+- Ensure `./data` is owned by UID `1000`.
+- Replace the Compose `healthcheck.test` with `["CMD", "node", "/app/healthcheck.js"]`.
+- Pin by digest and recreate only the `flame` service.
+- Expect a one-time re-login (legacy JWTs lack the `pwf` claim).
 
 ---
 
 ## Backup and Restore
 
-Because SQLite uses WAL mode (`db.sqlite-wal`, `db.sqlite-shm`), stop the container briefly before archiving `/app/data`:
-
-```bash
-STAMP=$(date +%Y%m%d-%H%M%S)
-docker compose stop flame
-tar --numeric-owner -czf "flame-data-backup-${STAMP}.tar.gz" -C /path/to/flame data
-chmod 600 "flame-data-backup-${STAMP}.tar.gz"
-docker compose start flame
-```
-
-> **Note:** Flame's built-in GUI Backup/Restore excludes secrets (`WEATHER_API_KEY`, `PIHOLE_SECRETS`, `CALENDAR_SECRETS`, `data/.secret`, `PASSWORD`). Use filesystem backups of `/app/data` for complete recovery.
-
-**Restore:**
-
-```bash
-docker compose stop flame
-mv ./data "./data.broken-$(date +%Y%m%d-%H%M%S)"
-tar --numeric-owner -xzf "flame-data-backup-<STAMP>.tar.gz" -C /path/to/flame
-chmod 600 ./data/.secret
-docker compose up -d flame
-```
+SQLite runs in WAL mode, so stop the container briefly before archiving `/app/data` (`docker compose stop flame`, archive `data/` with `tar --numeric-owner`, then start it again). The built-in GUI backup excludes secrets (`data/.secret`, `PASSWORD`, API keys); use filesystem backups for complete recovery. Exact commands for backup and restore: [`docs/BACKUP-RESTORE.md`](https://github.com/dgcosenza/flame-docker/blob/main/docs/BACKUP-RESTORE.md).
 
 ---
 
@@ -365,43 +314,26 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 ```bash
 git clone https://github.com/dgcosenza/flame-docker.git
 cd flame-docker
-
-docker buildx build \
-  --platform linux/amd64 \
-  --load \
-  --build-arg IMAGE_CREATED="$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-  --build-arg IMAGE_REVISION="$(git rev-parse HEAD)" \
-  -t dgcosenza/flame:local \
-  .
+docker buildx build --platform linux/amd64 --load -t dgcosenza/flame:local .
 ```
 
-| Build Arg | Default | Purpose |
-| --- | --- | --- |
-| `NODE_VERSION` | `26.13.1` | Official `node:<ver>-trixie-slim` base tag. |
-| `FLAME_REPO` | `https://github.com/AlexStapleton/Flame-Revamped.git` | Upstream repository URL. |
-| `FLAME_VERSION` | `2.1.0` | Upstream release version (OCI label). |
-| `FLAME_COMMIT` | `0d6221d8ff4c800a93d6e42557ac16658ebaa6d5` | Pinned upstream commit SHA (verified at build). |
-| `IMAGE_CREATED` | `""` | RFC 3339 UTC build timestamp. |
-| `IMAGE_REVISION` | `""` | Packaging repo Git SHA. |
-| `IMAGE_SOURCE` | `https://github.com/dgcosenza/flame-docker` | Source URL for OCI labels. |
-
-**Multi-stage build:** (1) `source` clones and verifies `FLAME_COMMIT`, applies `patches/*.patch`, and adds `tests/compat.test.js`; (2) `client-builder` runs `npm update`, `npm audit --audit-level=low`, `tsc --noEmit`, and `vite build` (with `.br`/`.gz` assets); (3) `server-builder` updates deps, compiles native `sqlite3` from source, runs `npm test` (250+ tests), prunes devDeps, and enforces `npm audit --omit=dev --audit-level=low`; (4) `runtime` upgrades Debian 13 (`apt-get upgrade`), strips `npm`/`npx`/`corepack`/`yarn`, copies production artifacts, sets UID 1000 ownership on writable paths only, and runs as `USER node`.
+Build arguments (`NODE_VERSION`, `FLAME_REPO`, `FLAME_VERSION`, `FLAME_COMMIT`, `IMAGE_*`) and the four-stage build are documented in [`docs/BUILD.md`](https://github.com/dgcosenza/flame-docker/blob/main/docs/BUILD.md).
 
 ---
 
 ## Update Policy
 
-[`.github/workflows/daily.yml`](https://github.com/dgcosenza/flame-docker/blob/main/.github/workflows/daily.yml) runs automatically every day at **04:17 UTC**, on pushes to `main`, on pull requests (verification only, without pushing), and via `workflow_dispatch`. Every scheduled run executes a seven-step automated pipeline (gated by `.github/workflows/public-check.yml`):
+[`.github/workflows/daily.yml`](https://github.com/dgcosenza/flame-docker/blob/main/.github/workflows/daily.yml) runs every day at **04:17 UTC**, on pushes to `main`, on pull requests (verification only, no publishing) and via `workflow_dispatch`. Each scheduled run is a fully automated seven-step pipeline, gated by `.github/workflows/public-check.yml`:
 
-1. **Upstream check:** Resolves the latest active Node.js LTS release published on Docker Hub for `trixie-slim`, checks `AlexStapleton/Flame-Revamped` via the authenticated GitHub API, compares against `versions.json`, and emits an `upstream-changes.md` artifact.
-2. **No-cache rebuild:** Rebuilds `linux/amd64` with `--no-cache` on schedule, runs `apt-get update && apt-get -y upgrade`, updates client and server npm dependencies, rebuilds the Vite frontend, compiles native `sqlite3` from source, executes the full test suite, and generates an **SPDX SBOM** (`sbom.spdx.json`) and build provenance artifact.
-3. **Vulnerability fix and gate:** Enforces `npm audit --audit-level=low` = **0**, runs **Trivy** (table, JSON, SARIF upload to Code Scanning, and blocking `--ignore-unfixed` gate) and **Grype** (blocking `--only-fixed` gate, severity cutoff `high`), diffs findings against the previous scan to record resolved CVEs, and retains scan reports for 90 days.
-4. **Smoke test:** Executes [`tests/smoke.sh`](https://github.com/dgcosenza/flame-docker/blob/main/tests/smoke.sh) to verify non-root UID `1000` startup, HTTP 200 on `/` and `/health`, `healthcheck.js` pass/fail behavior (including a negative dead-port test), and `0600` permissions on `data/.secret`.
-5. **Publish:** On non-PR builds when registry credentials are configured, pushes `latest`, `<version>`, `<version>-<YYYYMMDD>`, `<version>-<commit>`, `<version>-<commit>-<YYYYMMDD>`, and `sha-<short>` tags to Docker Hub and records the immutable digest.
-6. **Automated documentation sync:** Commits updated `versions.json`, the README `Current Versions` block, and a dated `CHANGELOG.md` entry (upstream changes, resolved CVEs, and digest) via `github-actions[bot]` with `[skip ci]` when content changes, then syncs the Docker Hub repository overview and short description via `peter-evans/dockerhub-description`.
-7. **Failure alerting:** If any step fails on `main` or a scheduled run, CI opens or updates a single GitHub issue labeled `ci-failure` with the failing job and run link, and automatically closes it on the next green run.
+1. **Upstream check** of the latest Node.js LTS (`trixie-slim`) and `AlexStapleton/Flame-Revamped`, compared against `versions.json`.
+2. **No-cache rebuild** with `apt-get upgrade`, fresh npm dependencies, a rebuilt frontend and the full test suite.
+3. **Vulnerability gate:** `npm audit` = 0, Trivy and Grype block on any fixable High/Critical finding; reports are retained for 90 days.
+4. **Smoke test** ([`tests/smoke.sh`](https://github.com/dgcosenza/flame-docker/blob/main/tests/smoke.sh)): non-root startup, `/` and `/health`, healthcheck pass and fail paths, `0600` on `data/.secret`.
+5. **Publish** of the tags listed in [Tags and Versioning Policy](#tags-and-versioning-policy) to Docker Hub and GHCR, signed and attested.
+6. **Automated documentation sync** of `versions.json`, the *Current Versions* block, the dated `CHANGELOG.md` entry and the Docker Hub overview.
+7. **Failure alerting** through a single `ci-failure` GitHub issue, closed automatically on the next green run.
 
-**Deployment pickup:** Pin deployments by digest and promote new digests only after verifying the container healthcheck, keeping the previous digest available for rollback. Avoid unpinned `:latest` pulls and automatic updaters such as Watchtower.
+Details of every step and the deployment-pickup guidance: [`docs/UPDATE-POLICY.md`](https://github.com/dgcosenza/flame-docker/blob/main/docs/UPDATE-POLICY.md). Pin deployments by digest and promote new digests only after verifying the healthcheck; avoid unpinned `:latest` pulls and automatic updaters.
 
 ---
 
@@ -415,13 +347,11 @@ docker buildx build \
 
 ## Troubleshooting
 
-- **Exits with `FATAL: PASSWORD environment variable is not set`:** Supply `PASSWORD`, `PASSWORD_FILE=/run/secrets/password`, or mount `/run/secrets/password` readable by UID `1000`.
-- **`EACCES: permission denied` in `/app/data`:** Fix ownership on the host: `chown -R 1000:1000 ./data && chmod 600 ./data/.secret`.
-- **Container `unhealthy` after upgrading from `pawelmalak/flame`:** Replace `wget ...` in Compose `healthcheck.test` with `["CMD", "node", "/app/healthcheck.js"]`.
-- **Logged out after upgrade or password change:** Expected — JWTs are bound to `PASSWORD` and require HS256. Sign in once under Settings → App.
-- **External assets blocked by CSP:** Set `CSP=off` only if custom CSS or icons require it.
-- **Rate limiter triggers across all users behind a proxy:** Set `TRUST_PROXY=1` (matching your proxy hop count).
-- **Incomplete SQLite backup:** SQLite runs in WAL mode; stop Flame briefly before copying `data/` or include `-wal` and `-shm`.
+- **`FATAL: PASSWORD environment variable is not set`:** supply `PASSWORD`, `PASSWORD_FILE=/run/secrets/password`, or a readable `/run/secrets/password`.
+- **`EACCES` in `/app/data`:** `chown -R 1000:1000 ./data && chmod 600 ./data/.secret`.
+- **Container `unhealthy` after migrating:** use `["CMD", "node", "/app/healthcheck.js"]` as `healthcheck.test`.
+
+More cases (logout after upgrade, CSP, rate limiter behind a proxy, WAL backups): [`docs/TROUBLESHOOTING.md`](https://github.com/dgcosenza/flame-docker/blob/main/docs/TROUBLESHOOTING.md).
 
 ---
 
