@@ -1,5 +1,9 @@
 # Flame — Hardened Debian 13 (trixie) / Node.js LTS Image
 
+[![Daily Build, Scan, and Publish](https://github.com/dgcosenza/flame-docker/actions/workflows/daily.yml/badge.svg)](https://github.com/dgcosenza/flame-docker/actions/workflows/daily.yml)
+[![Docker Pulls](https://img.shields.io/docker/pulls/dgcosenza/flame)](https://hub.docker.com/r/dgcosenza/flame)
+[![Docker Image Size](https://img.shields.io/docker/image-size/dgcosenza/flame/latest)](https://hub.docker.com/r/dgcosenza/flame)
+
 A hardened, actively maintained container image for **Flame** (self-hosted startpage and dashboard), built on **Debian 13 (trixie)** and the **latest active Node.js LTS** runtime, maintained by **Daniel G. Cosenza from FNX Labs**.
 
 - **Docker Hub:** [`dgcosenza/flame`](https://hub.docker.com/r/dgcosenza/flame)
@@ -25,14 +29,30 @@ The official [`pawelmalak/flame`](https://github.com/pawelmalak/flame) `v2.4.0` 
 
 ---
 
+## Current Versions
+
+<!-- versions:start -->
+| Component | Resolved Version |
+| --- | --- |
+| Flame-Revamped | `2.1.0 (0d6221d8)` |
+| Node.js LTS | `26.13.1` |
+| Base OS | `Debian 13.8 (trixie-slim)` |
+| Last verified build (UTC) | `2026-11-24` |
+| Security gate (Trivy + Grype) | **0 fixable Critical/High** (0 upstream-unfixed) |
+<!-- versions:end -->
+
+---
+
 ## Tags and Versioning Policy
 
 | Tag | Policy | Description |
 | --- | --- | --- |
-| `<version>-<commit>-<YYYYMMDD>` (e.g. `2.1.0-0d6221d8-20261120`) | **Immutable** | Point-in-time build pinning the upstream release, commit, and build date. |
+| `<version>-<commit>-<YYYYMMDD>` (e.g. `2.1.0-0d6221d8-20261124`) | **Immutable** | Point-in-time build pinning the upstream release, commit, and build date. |
+| `<version>-<YYYYMMDD>` (e.g. `2.1.0-20261124`) | **Immutable** | Date-stamped daily security rebuild. |
+| `sha-<short>` | **Immutable** | Packaging repository commit tag. |
 | `<version>-<commit>` (e.g. `2.1.0-0d6221d8`) | Moving (same commit) | Latest verified Debian 13 / Node LTS security rebuild of that commit. |
 | `<version>` (e.g. `2.1.0`) | Moving (patch line) | Latest verified build in the `2.1.0` line. |
-| `latest` | Moving | Latest verified Debian 13 / Node LTS build passing all audit, test, and Trivy gates. |
+| `latest` | Moving | Latest verified Debian 13 / Node LTS build passing all audit, test, Trivy, and Grype gates. |
 
 **Production pinning:** Pin by **registry digest** rather than pulling unpinned `:latest`:
 
@@ -278,7 +298,7 @@ docker compose up -d flame
 - **JWT signing & rotation:** `data/.secret` is created mode `0600`. Tokens require **HS256**, clamp TTLs to `1h|1d|14d|30d|1y` (default `14d`), and embed an HMAC password fingerprint (`pwf`). Rotating `PASSWORD` or `data/.secret` invalidates all active tokens immediately.
 - **Web hardening:** Strict `Content-Security-Policy`, `nosniff`, `SAMEORIGIN`, sandboxed `/uploads`, DOMPurify SVG sanitization, blocked `javascript:`/`data:` URLs, login rate limiting (10 failed attempts / 15 min), constant-time password verification, 100 KB JSON body cap (10 MB backup import), and explicit write field allowlists.
 - **LAN-only posture:** Because public dashboard items are unauthenticated by design, keep Flame bound to a private LAN interface rather than exposed on the public internet.
-- **Audit & CVE gate:** Builds fail on any `npm audit --audit-level=low` finding (>0) or any Trivy **fixable** `CRITICAL`/`HIGH` finding. Upstream-unfixed Debian 13 OS advisories are logged transparently in CI and cleared automatically by daily rebuilds once Debian Security publishes fixes.
+- **Audit & CVE gate:** Builds fail on any `npm audit --audit-level=low` finding (>0), any **Trivy** fixable `CRITICAL`/`HIGH` finding (`--ignore-unfixed`), or any **Grype** fixable `CRITICAL`/`HIGH` finding (`--only-fixed`). Current status: **0 fixable Critical/High** vulnerabilities. Trivy SARIF results are uploaded to GitHub Code Scanning, full Trivy/Grype reports and an **SPDX SBOM** are persisted as CI artifacts, and any upstream-unfixed Debian 13 advisories are cleared automatically by daily rebuilds once Debian Security publishes fixes. See [`SECURITY.md`](https://github.com/dgcosenza/flame-docker/blob/main/SECURITY.md).
 
 ---
 
@@ -322,17 +342,27 @@ docker buildx build \
 
 ---
 
-## Daily Maintenance and CI
+## Update Policy
 
-[`.github/workflows/build-and-publish.yml`](https://github.com/dgcosenza/flame-docker/blob/main/.github/workflows/build-and-publish.yml) runs daily (`17 4 * * *` UTC, `--no-cache`), on push to `main`, on PRs (build + scan only), and via `workflow_dispatch`:
+[`.github/workflows/daily.yml`](https://github.com/dgcosenza/flame-docker/blob/main/.github/workflows/daily.yml) runs automatically every day at **04:17 UTC**, on pushes to `main`, on pull requests (verification only, without pushing), and via `workflow_dispatch`. Every scheduled run executes a seven-step automated pipeline (gated by `.github/workflows/public-check.yml`):
 
-1. Resolves the newest active Node.js LTS tag published on Docker Hub for `trixie-slim`.
-2. Builds `linux/amd64` (upgrading Debian 13, updating npm deps, rebuilding Vite client, compiling `sqlite3`, passing `npm audit` = 0 and `npm test`).
-3. Smoke-tests the built container (UID 1000, `/health` 200, `healthcheck.js` pass on 5005 and fail on dead port 5999, `data/.secret` mode `0600`).
-4. Runs Trivy and **refuses to push** if any fixable `CRITICAL` or `HIGH` vulnerability is present.
-5. Pushes immutable date, commit, version, and `latest` tags to `dgcosenza/flame` and syncs Docker Hub short (`DOCKERHUB_SHORT_DESCRIPTION`) and full (`README.md`) descriptions via `peter-evans/dockerhub-description`.
+1. **Upstream check:** Resolves the latest active Node.js LTS release published on Docker Hub for `trixie-slim`, checks `AlexStapleton/Flame-Revamped` via the authenticated GitHub API, compares against `versions.json`, and emits an `upstream-changes.md` artifact.
+2. **No-cache rebuild:** Rebuilds `linux/amd64` with `--no-cache` on schedule, runs `apt-get update && apt-get -y upgrade`, updates client and server npm dependencies, rebuilds the Vite frontend, compiles native `sqlite3` from source, executes the full test suite, and generates an **SPDX SBOM** (`sbom.spdx.json`) and build provenance artifact.
+3. **Vulnerability fix and gate:** Enforces `npm audit --audit-level=low` = **0**, runs **Trivy** (table, JSON, SARIF upload to Code Scanning, and blocking `--ignore-unfixed` gate) and **Grype** (blocking `--only-fixed` gate, severity cutoff `high`), diffs findings against the previous scan to record resolved CVEs, and retains scan reports for 90 days.
+4. **Smoke test:** Executes [`tests/smoke.sh`](https://github.com/dgcosenza/flame-docker/blob/main/tests/smoke.sh) to verify non-root UID `1000` startup, HTTP 200 on `/` and `/health`, `healthcheck.js` pass/fail behavior (including a negative dead-port test), and `0600` permissions on `data/.secret`.
+5. **Publish:** On non-PR builds when registry credentials are configured, pushes `latest`, `<version>`, `<version>-<YYYYMMDD>`, `<version>-<commit>`, `<version>-<commit>-<YYYYMMDD>`, and `sha-<short>` tags to Docker Hub and records the immutable digest.
+6. **Automated documentation sync:** Commits updated `versions.json`, the README `Current Versions` block, and a dated `CHANGELOG.md` entry (upstream changes, resolved CVEs, and digest) via `github-actions[bot]` with `[skip ci]` when content changes, then syncs the Docker Hub repository overview and short description via `peter-evans/dockerhub-description`.
+7. **Failure alerting:** If any step fails on `main` or a scheduled run, CI opens or updates a single GitHub issue labeled `ci-failure` with the failing job and run link, and automatically closes it on the next green run.
 
 **Deployment pickup:** Pin deployments by digest and promote new digests only after verifying the container healthcheck, keeping the previous digest available for rollback. Avoid unpinned `:latest` pulls and automatic updaters such as Watchtower.
+
+---
+
+## Design Decisions
+
+- **Debian 13 (`trixie-slim`) + Node.js LTS:** Uses official `node:<LTS>-trixie-slim` with `apt-get upgrade` at build time rather than Alpine/musl so native `sqlite3` compiles cleanly against Debian 13 glibc and tracks Debian Security advisories.
+- **Node.js dependency-free healthcheck:** `/app/healthcheck.js` uses Node's built-in `http` module, eliminating `curl`/`wget` from the runtime layer.
+- **Minimal, read-only runtime:** Compilers, `git`, `npm`, `npx`, `corepack`, and `yarn` are removed from the runtime image while `package-lock.json` is retained for accurate scanner visibility.
 
 ---
 

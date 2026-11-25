@@ -2,7 +2,20 @@
 
 All notable changes to the `dgcosenza/flame` Debian 13 / Node LTS container packaging and patches are documented in this file.
 
-The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Application version numbers track the pinned upstream `AlexStapleton/Flame-Revamped` release.
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Application version numbers track the pinned upstream `AlexStapleton/Flame-Revamped` release. Maintained by **Daniel G. Cosenza from FNX Labs**.
+
+---
+<!-- changelog:auto -->
+
+## [2.1.0-0d6221d8] — 2026-11-24
+
+### Added
+- Full seven-step automated daily pipeline in `.github/workflows/daily.yml` (upstream check with `versions.json`, `--no-cache` rebuild, Trivy + Grype blocking gates with CVE diffing and 90-day report artifacts, Syft SPDX SBOM + provenance, smoke testing, automated `README.md`/`CHANGELOG.md` bot sync + Docker Hub description sync, and `ci-failure` GitHub issue alerting with auto-close on recovery).
+- Standalone `tests/smoke.sh`, `SECURITY.md`, `THIRD-PARTY-NOTICES.md`, `.github/dependabot.yml`, and automated public-content verification (`.github/workflows/public-check.yml`).
+- Additional immutable tags `<version>-<YYYYMMDD>` and `sha-<short>` published on release.
+
+### Changed
+- Updated base OS references to current Debian 13 point release (13.8 as of 2026-11-24) and standardized maintainer attribution (`Daniel G. Cosenza from FNX Labs`) and OCI label namespace (`io.github.dgcosenza.flame.*`).
 
 ---
 
