@@ -17,3 +17,6 @@ tools/
 .env.local
 node_modules/
 data/
+
+__pycache__/
+*.pyc
