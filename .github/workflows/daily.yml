@@ -19,7 +19,7 @@ on:
       flame_commit:
         description: 'Override upstream Flame-Revamped git commit SHA (leave empty for Dockerfile default)'
         required: false
-        default: ''r
+        default: ''
 
 permissions: {}
 
@@ -30,7 +30,7 @@ concurrency:
 env:
   IMAGE_NAME: dgcosenza/flame
   FLAME_VERSION_DEFAULT: '2.1.0'
-  FLAME_COMMIT_DEFAULT: '0d6221d8ff4c800a93d6e42557ac16658ebaa6d5'r
+  FLAME_COMMIT_DEFAULT: '0d6221d8ff4c800a93d6e42557ac16658ebaa6d5'
 
 jobs:
   public-check:
@@ -106,7 +106,7 @@ jobs:
       base_digest: ${{ steps.resolve.outputs.base_digest }}
       build_date: ${{ steps.resolve.outputs.build_date }}
       build_date_iso: ${{ steps.resolve.outputs.build_date_iso }}
-      created: ${{ steps.resolve.outputs.created }}r
+      created: ${{ steps.resolve.outputs.created }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -119,7 +119,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           INPUT_NODE: ${{ inputs.node_version }}
-          INPUT_COMMIT: ${{ inputs.flame_commit }}r
+          INPUT_COMMIT: ${{ inputs.flame_commit }}
         run: |
           set -euo pipefail
 
@@ -187,7 +187,7 @@ jobs:
             echo "build_date=${BUILD_DATE}"
             echo "build_date_iso=${BUILD_DATE_ISO}"
             echo "created=${CREATED}"
-          } >> "$GITHUB_OUTPUT" r
+          } >> "$GITHUB_OUTPUT" 
 
       - name: Upload upstream changes artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -247,7 +247,7 @@ jobs:
             FLAME_COMMIT=${{ needs.resolve.outputs.upstream_commit }}
             IMAGE_CREATED=${{ needs.resolve.outputs.created }}
             IMAGE_REVISION=${{ github.sha }}
-            IMAGE_SOURCE=https://github.com/${{ github.repository }}r
+            IMAGE_SOURCE=https://github.com/${{ github.repository }}
 
       - name: Inspect OS version and image size
         id: inspect_image
@@ -398,7 +398,7 @@ jobs:
             FLAME_COMMIT=${{ needs.resolve.outputs.upstream_commit }}
             IMAGE_CREATED=${{ needs.resolve.outputs.created }}
             IMAGE_REVISION=${{ github.sha }}
-            IMAGE_SOURCE=https://github.com/${{ github.repository }}r
+            IMAGE_SOURCE=https://github.com/${{ github.repository }}
 
       - name: Record per-arch metadata
         shell: bash
@@ -689,7 +689,7 @@ jobs:
             --arg upstream_version "${{ needs.resolve.outputs.upstream_version }}" \
             --arg upstream_commit "${{ needs.resolve.outputs.upstream_commit }}" \
             --arg short_sha "${{ needs.resolve.outputs.short_sha }}" \
-            --arg node_version "${{ needs.resolve.outputs.node_version }}" \\r
+            --arg node_version "${{ needs.resolve.outputs.node_version }}" \
             --arg debian_version "${DEBIAN_VER}" \
             --arg base_digest "${{ needs.resolve.outputs.base_digest }}" \
             --arg build_date "${{ needs.resolve.outputs.build_date_iso }}" \
@@ -714,7 +714,7 @@ jobs:
               components: {
                 "Flame-Revamped": ($upstream_version + " (" + $short_sha + ")"),
                 "Node.js LTS": $node_version,
-                "Base OS": ("Debian " + $debian_version + " (trixie-slim)")r
+                "Base OS": ("Debian " + $debian_version + " (trixie-slim)")
               },
               base_image: ("node:" + $node_version + "-trixie-slim"),
               base_digest: $base_digest,
@@ -867,4 +867,3 @@ jobs:
           else
             echo "All jobs succeeded and no open ci-failure issue exists."
           fi
-r
