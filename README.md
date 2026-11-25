@@ -45,9 +45,13 @@ The official [`pawelmalak/flame`](https://github.com/pawelmalak/flame) `v2.4.0` 
 | Flame-Revamped | `2.1.0 (0d6221d8)` |
 | Node.js LTS | `26.13.1` |
 | Base OS | `Debian 13.8 (trixie-slim)` |
+| Architectures | `linux/amd64, linux/arm64` |
+| Uncompressed size (per arch) | `amd64: 113.5 MB, arm64: 409.0 MB` |
 | Last verified build (UTC) | `2026-11-25` |
-| Published digest | `dgcosenza/flame@sha256:b14350e6fc8b8bbe0a9d8743b0d24947418460ca089f41efcdafa686bedc78ca` |
-| Security gate (Trivy + Grype) | **0 fixable Critical/High** (13 upstream-unfixed) |
+| Published multi-arch digest | `dgcosenza/flame@sha256:5bf46f173030bdba8f0e22b19cdcfb2bd3faab20ecf3b0f2b81778c34213d1cb` |
+| GHCR mirror | `ghcr.io/dgcosenza/flame@sha256:5bf46f173030bdba8f0e22b19cdcfb2bd3faab20ecf3b0f2b81778c34213d1cb` |
+| Supply chain | Cosign OIDC signed + SPDX & CycloneDX SBOM attestations + SLSA Build L3 provenance |
+| Security gate (Trivy + Grype on SBOM) | **0 fixable Critical/High** (13 upstream-unfixed) |
 <!-- versions:end -->
 
 ---
