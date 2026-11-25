@@ -7,6 +7,16 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). App
 ---
 <!-- changelog:auto -->
 
+## [2.1.0-0d6221d8] — 2026-11-25
+
+### Automated Daily Build
+- Verified components: Flame-Revamped `2.1.0 (0d6221d8)`, Node.js LTS `26.13.1`, Base OS `Debian 13.8 (trixie-slim)`.
+- Upstream status: no new upstream release since previous build; refreshed base OS and dependencies.
+- Vulnerability gate: **0 fixable Critical/High** in Trivy and Grype (13 upstream-unfixed).
+- Published digest: `dgcosenza/flame@sha256:b73ac8664a9acf8759d45a98fd2ec661886cedfdd59df8922ff0861a4e7c7955`.
+
+---
+
 ## [2.1.0-0d6221d8] — 2026-11-24
 
 ### Added

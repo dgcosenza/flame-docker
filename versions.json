@@ -10,11 +10,25 @@
     "Base OS": "Debian 13.8 (trixie-slim)"
   },
   "base_image": "node:26.13.1-trixie-slim",
-  "base_digest": "",
+  "base_digest": "sha256:abe7e5a82b61a8ef67b315b85497c9e65173387ccf2f4a029248184b8e020be5",
   "debian_version": "13.8",
-  "build_date": "2026-11-24",
-  "built_at_utc": "2026-11-24T00:00:00Z",
-  "image_digest": "",
+  "build_date": "2026-11-25",
+  "built_at_utc": "2026-11-25T02:23:16Z",
+  "image_digest": "dgcosenza/flame@sha256:b73ac8664a9acf8759d45a98fd2ec661886cedfdd59df8922ff0861a4e7c7955",
   "fixable_critical_high": 0,
-  "unfixed_cves": []
+  "unfixed_cves": [
+    "CVE-2025-69720",
+    "CVE-2026-107494",
+    "CVE-2026-119373",
+    "CVE-2026-119374",
+    "CVE-2026-119379",
+    "CVE-2026-124709",
+    "CVE-2026-16742",
+    "CVE-2026-54369",
+    "CVE-2026-76642",
+    "CVE-2026-78408",
+    "CVE-2026-78409",
+    "CVE-2026-78410",
+    "CVE-2026-9538"
+  ]
 }

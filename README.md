@@ -37,8 +37,9 @@ The official [`pawelmalak/flame`](https://github.com/pawelmalak/flame) `v2.4.0` 
 | Flame-Revamped | `2.1.0 (0d6221d8)` |
 | Node.js LTS | `26.13.1` |
 | Base OS | `Debian 13.8 (trixie-slim)` |
-| Last verified build (UTC) | `2026-11-24` |
-| Security gate (Trivy + Grype) | **0 fixable Critical/High** (0 upstream-unfixed) |
+| Last verified build (UTC) | `2026-11-25` |
+| Published digest | `dgcosenza/flame@sha256:b73ac8664a9acf8759d45a98fd2ec661886cedfdd59df8922ff0861a4e7c7955` |
+| Security gate (Trivy + Grype) | **0 fixable Critical/High** (13 upstream-unfixed) |
 <!-- versions:end -->
 
 ---
