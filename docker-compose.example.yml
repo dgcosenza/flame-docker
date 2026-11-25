@@ -1,13 +1,18 @@
-# Production-style LAN-only Docker Compose example for dgcosenza/flame
+# Hardened LAN-only Docker Compose example for dgcosenza/flame
 # Replace 192.0.2.10 with your host's LAN IP address and pin by @sha256 digest.
+# Available identically on Docker Hub (dgcosenza/flame) and GHCR (ghcr.io/dgcosenza/flame).
 
 services:
   flame:
     image: dgcosenza/flame:latest
     container_name: flame
     restart: unless-stopped
+    cap_drop:
+      - ALL
     security_opt:
       - no-new-privileges:true
+    tmpfs:
+      - /tmp:noexec,nosuid,size=32m
     ports:
       # Bind to your LAN interface only (never 0.0.0.0 unless intentionally proxied)
       - "192.0.2.10:5005:5005"

@@ -1,23 +1,24 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1.7
 
+ARG NODE_BASE=node:26.13.1-trixie-slim@sha256:abe7e5a82b61a8ef67b315b85497c9e65173387ccf2f4a029248184b8e020be
 ARG NODE_VERSION=26.13.1
 ARG FLAME_REPO=https://github.com/AlexStapleton/Flame-Revamped.git
 ARG FLAME_VERSION=2.1.0
 ARG FLAME_COMMIT=0d6221d8ff4c800a93d6e42557ac16658ebaa6d5
 
 # ---- Stage 1: fetch pinned upstream source & apply audited patches ----
-FROM node:${NODE_VERSION}-trixie-slim AS source
+FROM ${NODE_BASE} AS source
 
 ARG FLAME_REPO
 ARG FLAME_COMMIT
-
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates git \
-    && rm -rf /var/lib/apt/lists/*
+ARG DEBIAN_FRONTEND=noninteractive
 
 WORKDIR /src
 
-RUN git init \
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates git \
+    && rm -rf /var/lib/apt/lists/* \
+    && git init \
     && git remote add origin "${FLAME_REPO}" \
     && git fetch --depth 1 origin "${FLAME_COMMIT}" \
     && git checkout --detach FETCH_HEAD \
@@ -34,7 +35,7 @@ RUN set -e; for p in /tmp/patches/*.patch; do \
     && rm -rf /tmp/patches /src/.git
 
 # ---- Stage 2: update client dependencies, audit, typecheck & build frontend ----
-FROM node:${NODE_VERSION}-trixie-slim AS client-builder
+FROM ${NODE_BASE} AS client-builder
 
 WORKDIR /app/client
 COPY --from=source /src/client/ ./
@@ -45,7 +46,9 @@ RUN npm update \
     && npm run build
 
 # ---- Stage 3: update server deps, compile sqlite3 from source, test & audit ----
-FROM node:${NODE_VERSION}-trixie-slim AS server-builder
+FROM ${NODE_BASE} AS server-builder
+
+ARG DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends g++ make python3 \
@@ -53,19 +56,19 @@ RUN apt-get update \
 
 WORKDIR /app
 COPY --from=source /src/ ./
-RUN rm -rf /app/client
 
 # Update server dependencies to latest compatible releases, rebuild native sqlite3
 # against Debian 13 (trixie) glibc + current Node LTS ABI, run the full test
 # suite, prune devDependencies, and fail the build on any npm audit finding.
-RUN npm update \
+RUN rm -rf /app/client \
+    && npm update \
     && npm rebuild sqlite3 --build-from-source \
     && npm test \
     && npm prune --omit=dev \
     && npm audit --omit=dev --audit-level=low
 
 # ---- Stage 4: hardened Debian 13 (trixie) + Node LTS runtime ----
-FROM node:${NODE_VERSION}-trixie-slim AS runtime
+FROM ${NODE_BASE} AS runtime
 
 ARG NODE_VERSION
 ARG FLAME_REPO
@@ -74,9 +77,10 @@ ARG FLAME_COMMIT
 ARG IMAGE_CREATED=""
 ARG IMAGE_REVISION=""
 ARG IMAGE_SOURCE="https://github.com/dgcosenza/flame-docker"
+ARG DEBIAN_FRONTEND=noninteractive
 
 LABEL org.opencontainers.image.title="Flame (Debian 13 / Node LTS)" \
-      org.opencontainers.image.description="Hardened, up-to-date Debian 13 (trixie) and Node LTS container image for Flame self-hosted startpage, maintained by Daniel G. Cosenza from FNX Labs." \
+      org.opencontainers.image.description="Hardened, multi-arch Debian 13 (trixie) and Node LTS container image for Flame self-hosted startpage, maintained by Daniel G. Cosenza from FNX Labs." \
       org.opencontainers.image.url="https://hub.docker.com/r/dgcosenza/flame" \
       org.opencontainers.image.source="${IMAGE_SOURCE}" \
       org.opencontainers.image.documentation="${IMAGE_SOURCE}#readme" \
@@ -86,15 +90,17 @@ LABEL org.opencontainers.image.title="Flame (Debian 13 / Node LTS)" \
       org.opencontainers.image.licenses="MIT" \
       org.opencontainers.image.vendor="Daniel G. Cosenza from FNX Labs" \
       org.opencontainers.image.authors="Daniel G. Cosenza from FNX Labs" \
+      org.opencontainers.image.base.name="node:${NODE_VERSION}-trixie-slim" \
       io.github.dgcosenza.flame.upstream_repo="${FLAME_REPO}" \
       io.github.dgcosenza.flame.upstream_version="${FLAME_VERSION}" \
       io.github.dgcosenza.flame.upstream_commit="${FLAME_COMMIT}" \
       io.github.dgcosenza.flame.node_version="${NODE_VERSION}"
 
-# Fully upgrade Debian 13 (trixie) base packages at build time and remove
-# build-only package managers (npm/npx/corepack/yarn) not used at runtime.
+# Fully upgrade Debian 13 (trixie) base packages, install tini for PID 1,
+# remove build-only package managers not used at runtime, and create writable dirs.
 RUN apt-get update \
     && apt-get -y --no-install-recommends upgrade \
+    && apt-get install -y --no-install-recommends tini \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
        /usr/local/lib/node_modules/npm \
@@ -104,33 +110,30 @@ RUN apt-get update \
        /usr/local/bin/corepack \
        /usr/local/bin/yarn \
        /usr/local/bin/yarnpkg \
-       /opt/yarn-*
+       /opt/yarn-* \
+       /tmp/* /var/tmp/* \
+    && mkdir -p /app/data /app/log /app/public \
+    && touch /app/public/flame.css \
+    && chown -R node:node /app/data /app/log /app/public/flame.css
 
 WORKDIR /app
 
 # Server code, lockfile (kept intact for transparent vulnerability scanning),
 # and production node_modules (root-owned, read-only to the non-root user).
-COPY --from=server-builder /app/node_modules ./node_modules
-COPY --from=server-builder /app/package.json /app/package-lock.json ./
-COPY --from=server-builder /app/CHANGELOG.md ./
-COPY --from=server-builder /app/server.js /app/api.js /app/Socket.js /app/Sockets.js ./
-COPY --from=server-builder /app/controllers ./controllers
-COPY --from=server-builder /app/db ./db
-COPY --from=server-builder /app/middleware ./middleware
-COPY --from=server-builder /app/models ./models
-COPY --from=server-builder /app/routes ./routes
-COPY --from=server-builder /app/utils ./utils
-COPY healthcheck.js ./healthcheck.js
+COPY --from=server-builder --chown=0:0 /app/node_modules ./node_modules
+COPY --from=server-builder --chown=0:0 /app/package.json /app/package-lock.json ./
+COPY --from=server-builder --chown=0:0 /app/CHANGELOG.md ./
+COPY --from=server-builder --chown=0:0 /app/server.js /app/api.js /app/Socket.js /app/Sockets.js ./
+COPY --from=server-builder --chown=0:0 /app/controllers ./controllers
+COPY --from=server-builder --chown=0:0 /app/db ./db
+COPY --from=server-builder --chown=0:0 /app/middleware ./middleware
+COPY --from=server-builder --chown=0:0 /app/models ./models
+COPY --from=server-builder --chown=0:0 /app/routes ./routes
+COPY --from=server-builder --chown=0:0 /app/utils ./utils
+COPY --chown=0:0 healthcheck.js ./healthcheck.js
 
 # Rebuilt Vite frontend assets
-COPY --from=client-builder /app/client/dist ./public
-
-# Writable runtime directories for non-root uid 1000 (`node`).
-# `/app/public/flame.css` is pre-created and owned by `node:node` so custom CSS
-# edits work while the rest of `/app/public` remains read-only to the app user.
-RUN mkdir -p /app/data /app/log \
-    && touch /app/public/flame.css \
-    && chown -R node:node /app/data /app/log /app/public/flame.css
+COPY --from=client-builder --chown=0:0 /app/client/dist ./public
 
 ENV NODE_ENV=production \
     PORT=5005
@@ -142,4 +145,5 @@ EXPOSE 5005
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD ["node", "/app/healthcheck.js"]
 
+ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["node", "server.js"]

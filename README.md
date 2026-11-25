@@ -1,12 +1,20 @@
 # Flame — Hardened Debian 13 (trixie) / Node.js LTS Image
 
 [![Daily Build, Scan, and Publish](https://github.com/dgcosenza/flame-docker/actions/workflows/daily.yml/badge.svg)](https://github.com/dgcosenza/flame-docker/actions/workflows/daily.yml)
+[![Packaging License: MIT](https://img.shields.io/badge/packaging-MIT-blue.svg)](https://github.com/dgcosenza/flame-docker/blob/main/LICENSE)
+[![Upstream License: MIT](https://img.shields.io/badge/upstream-MIT-green.svg)](https://github.com/AlexStapleton/Flame-Revamped/blob/main/LICENSE)
+[![Signed with Cosign](https://img.shields.io/badge/signed-cosign%20OIDC-blueviolet.svg)](#supply-chain-verification)
+[![SLSA Level 3](https://img.shields.io/badge/SLSA-Level%203-brightgreen.svg)](#supply-chain-verification)
+[![Architectures](https://img.shields.io/badge/arch-amd64%20%7C%20arm64-informational.svg)](#supported-architectures)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/dgcosenza/flame-docker/badge)](https://scorecard.dev/viewer/?uri=github.com/dgcosenza/flame-docker)
 [![Docker Pulls](https://img.shields.io/docker/pulls/dgcosenza/flame)](https://hub.docker.com/r/dgcosenza/flame)
 [![Docker Image Size](https://img.shields.io/docker/image-size/dgcosenza/flame/latest)](https://hub.docker.com/r/dgcosenza/flame)
+[![Latest Release](https://img.shields.io/github/v/release/dgcosenza/flame-docker?label=version)](https://github.com/dgcosenza/flame-docker/releases)
 
 A hardened, actively maintained container image for **Flame** (self-hosted startpage and dashboard), built on **Debian 13 (trixie)** and the **latest active Node.js LTS** runtime, maintained by **Daniel G. Cosenza from FNX Labs**.
 
 - **Docker Hub:** [`dgcosenza/flame`](https://hub.docker.com/r/dgcosenza/flame)
+- **GitHub Container Registry (GHCR):** [`ghcr.io/dgcosenza/flame`](https://github.com/dgcosenza/flame-docker/pkgs/container/flame) (identical signed multi-arch digest)
 - **Source Repository:** [`dgcosenza/flame-docker`](https://github.com/dgcosenza/flame-docker)
 - **Upstream Application:** [`AlexStapleton/Flame-Revamped`](https://github.com/AlexStapleton/Flame-Revamped) `v2.1.0` (fork of [`pawelmalak/flame`](https://github.com/pawelmalak/flame))
 - **License:** MIT
@@ -67,11 +75,12 @@ Images publish `org.opencontainers.image.version` (e.g. `2.1.0`) so digest-check
 
 ## Supported Architectures
 
-| Architecture | Status | Notes |
+| Architecture | Status | Verification |
 | --- | --- | --- |
-| `linux/amd64` | **Published & tested** | Built, smoke-tested, Trivy-scanned, and published to Docker Hub (`dgcosenza/flame`). |
-| `linux/arm64` | Source-buildable | Not published on Docker Hub yet; build locally with `docker buildx build --platform linux/arm64`. |
+| `linux/amd64` | **Published & natively tested** | Built, smoke-tested, Dive-gated, Syft/Trivy/Grype-scanned, and Cosign-signed on native x86_64 CI runners. |
+| `linux/arm64` | **Published & natively tested** | Built, smoke-tested, Dive-gated, Syft/Trivy/Grype-scanned, and Cosign-signed on native ARM64 CI runners. |
 
+Identical multi-arch OCI manifest digests are published to **Docker Hub** and **GHCR** (`ghcr.io/dgcosenza/*`), accompanied by automated signed [GitHub Releases](https://github.com/dgcosenza/flame-docker/releases).
 ---
 
 ## Quick Start
@@ -291,6 +300,39 @@ docker compose up -d flame
 
 ---
 
+## Supply-Chain Verification
+
+Every published digest (multi-arch index and per-architecture manifests) on both Docker Hub and GHCR is keyless-signed with **Sigstore Cosign** (GitHub OIDC), attested with **SPDX** and **CycloneDX** SBOMs, and backed by **SLSA Build L3** provenance (`actions/attest-build-provenance`).
+
+### Verify image signature with Cosign
+
+```bash
+cosign verify \
+  --certificate-identity-regexp="^https://github\.com/dgcosenza/flame-docker/\.github/workflows/daily\.yml@refs/heads/main$" \
+  --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
+  ghcr.io/dgcosenza/flame:latest
+
+# Or against Docker Hub (identical digest):
+cosign verify \
+  --certificate-identity-regexp="^https://github\.com/dgcosenza/flame-docker/\.github/workflows/daily\.yml@refs/heads/main$" \
+  --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
+  dgcosenza/flame:latest
+```
+
+### Verify SPDX / CycloneDX SBOM attestations and SLSA Build Provenance
+
+```bash
+cosign verify-attestation \
+  --type spdxjson \
+  --certificate-identity-regexp="^https://github\.com/dgcosenza/flame-docker/\.github/workflows/daily\.yml@refs/heads/main$" \
+  --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
+  ghcr.io/dgcosenza/flame@sha256:<arch-digest>
+
+gh attestation verify oci://ghcr.io/dgcosenza/flame:latest --owner dgcosenza
+```
+
+---
+
 ## Security Notes
 
 - **Non-root & read-only code:** Runs as `node` (UID/GID `1000`) with `no-new-privileges:true`. `/app` code, `node_modules`, and static `/app/public` assets are `root:root` read-only; only `/app/data`, `/app/log`, and `/app/public/flame.css` are writable by UID `1000`.
@@ -385,10 +427,11 @@ See [`CHANGELOG.md`](https://github.com/dgcosenza/flame-docker/blob/main/CHANGEL
 
 ---
 
-## License and Credits
+## License
 
-Released under the [MIT License](https://github.com/dgcosenza/flame-docker/blob/main/LICENSE).
+This repository follows a clear packaging-vs-upstream license split:
 
-- **Flame:** Created by [Paweł Malak](https://github.com/pawelmalak/flame) and contributors.
-- **Flame Revamped:** Maintained by [Alex Stapleton](https://github.com/AlexStapleton/Flame-Revamped).
-- **Debian 13 / Node LTS packaging, patches, and CI:** Maintained by **Daniel G. Cosenza from FNX Labs**.
+- **Container packaging, scripts, CI workflows, and documentation (`packaging: MIT`):** Licensed under the [MIT License](https://github.com/dgcosenza/flame-docker/blob/main/LICENSE) — copyright **Daniel G. Cosenza from FNX Labs**.
+- **Bundled upstream software — Flame / Flame-Revamped (`AlexStapleton/Flame-Revamped`, fork of `pawelmalak/flame`) (`upstream: MIT`):** Created by [Paweł Malak](https://github.com/pawelmalak/flame) and maintained by [Alex Stapleton](https://github.com/AlexStapleton/Flame-Revamped) — licensed under the [MIT License](https://github.com/AlexStapleton/Flame-Revamped/blob/main/LICENSE).
+
+Full third-party notices are maintained in [`THIRD-PARTY-NOTICES.md`](https://github.com/dgcosenza/flame-docker/blob/main/THIRD-PARTY-NOTICES.md). Release history is maintained in [`CHANGELOG.md`](https://github.com/dgcosenza/flame-docker/blob/main/CHANGELOG.md).
