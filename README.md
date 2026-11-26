@@ -48,8 +48,8 @@ The official [`pawelmalak/flame`](https://github.com/pawelmalak/flame) `v2.4.0` 
 | Architectures | `linux/amd64, linux/arm64` |
 | Uncompressed size (per arch) | `amd64: 114.2 MB, arm64: 411.6 MB` |
 | Last verified build (UTC) | `2026-11-26` |
-| Published multi-arch digest | `dgcosenza/flame@sha256:c86609e2b5603169b95450330f81e5d2ae8f240048dec9164feee4854bf54d50` |
-| GHCR mirror | `ghcr.io/dgcosenza/flame@sha256:c86609e2b5603169b95450330f81e5d2ae8f240048dec9164feee4854bf54d50` |
+| Published multi-arch digest | `dgcosenza/flame@sha256:9d1e9bccabfa6e6f3528d201ca025bb6af685a7789f6bcaffa7f0f26709c9302` |
+| GHCR mirror | `ghcr.io/dgcosenza/flame@sha256:9d1e9bccabfa6e6f3528d201ca025bb6af685a7789f6bcaffa7f0f26709c9302` |
 | Supply chain | Cosign OIDC signed + SPDX & CycloneDX SBOM attestations + SLSA Build L3 provenance |
 | Security gate (Trivy + Grype on SBOM) | **0 fixable findings of any severity** (13 upstream-unfixed) |
 <!-- versions:end -->
