@@ -51,7 +51,7 @@ The official [`pawelmalak/flame`](https://github.com/pawelmalak/flame) `v2.4.0` 
 | Published multi-arch digest | `dgcosenza/flame@sha256:405fc87f804efb0c271439acce4a8d363742b25b832a613018c818fdf882e2bb` |
 | GHCR mirror | `ghcr.io/dgcosenza/flame@sha256:405fc87f804efb0c271439acce4a8d363742b25b832a613018c818fdf882e2bb` |
 | Supply chain | Cosign OIDC signed + SPDX & CycloneDX SBOM attestations + SLSA Build L3 provenance |
-| Security gate (Trivy + Grype on SBOM) | **0 fixable Critical/High** (13 upstream-unfixed) |
+| Security gate (Trivy + Grype on SBOM) | **0 fixable findings of any severity** (13 upstream-unfixed) |
 <!-- versions:end -->
 
 ---
