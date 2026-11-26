@@ -26,13 +26,31 @@ docker run -d --name "$NAME" \
 UID_ACTUAL="$(docker exec "$NAME" id -u)"
 test "$UID_ACTUAL" = "1000"
 
-# Wait for /health 200 and built-in healthcheck.js
-for _ in $(seq 1 30); do
-  if docker exec "$NAME" node /app/healthcheck.js; then
+# Wait for Docker's built-in HEALTHCHECK to report status=healthy
+HEALTH_STATUS=""
+for _ in $(seq 1 45); do
+  if ! docker ps -q --filter "name=^/${NAME}$" | grep -q .; then
+    echo "ERROR: flame container exited prematurely:" >&2
+    docker logs "$NAME" >&2 || true
+    exit 1
+  fi
+  HEALTH_STATUS="$(docker inspect --format '{{.State.Health.Status}}' "$NAME" 2>/dev/null || echo starting)"
+  if [ "$HEALTH_STATUS" = "healthy" ]; then
     break
   fi
-  sleep 1
+  if [ "$HEALTH_STATUS" = "unhealthy" ]; then
+    echo "ERROR: flame container became unhealthy" >&2
+    docker inspect --format '{{json .State.Health}}' "$NAME" >&2 || true
+    docker logs "$NAME" >&2 || true
+    exit 1
+  fi
+  sleep 2
 done
+if [ "$HEALTH_STATUS" != "healthy" ]; then
+  echo "ERROR: flame container did not reach Docker healthy status (last=${HEALTH_STATUS})" >&2
+  docker inspect --format '{{json .State.Health}}' "$NAME" >&2 || true
+  exit 1
+fi
 docker exec "$NAME" node /app/healthcheck.js
 
 # Prove healthcheck fails on a dead port (negative test)

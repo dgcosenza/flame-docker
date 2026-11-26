@@ -137,7 +137,9 @@ jobs:
           NODE_VERSION="${INPUT_NODE}"
           BASE_DIGEST=""
           if [ -z "$NODE_VERSION" ]; then
-            CANDIDATES=$(curl -fsSL https://nodejs.org/dist/index.json | python3 -c "import sys, json; print('\n'.join([r['version'].lstrip('v') for r in json.load(sys.stdin) if r.get('lts')][:8]))")
+            curl -fsSL -o /tmp/node-index.json https://nodejs.org/dist/index.json
+            CANDIDATES=$(python3 -c "import json; print('\n'.join([r['version'].lstrip('v') for r in json.load(open('/tmp/node-index.json')) if r.get('lts')][:8]))")
+            rm -f /tmp/node-index.json
             for cand in $CANDIDATES; do
               DIG="$(curl -fsSL "https://hub.docker.com/v2/repositories/library/node/tags/${cand}-trixie-slim" 2>/dev/null | jq -r '.digest // empty' || true)"
               if [ -n "$DIG" ]; then
