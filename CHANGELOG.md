@@ -13,6 +13,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). App
 
 <!-- changelog:auto -->
 
+## [2.1.0-0d6221d8] — 2026-11-26
+
+### Automated Daily Build
+- Verified components: Flame-Revamped `2.1.0 (0d6221d8)`, Node.js LTS `26.13.1`, Base OS `Debian 13.8 (trixie-slim)`.
+- Architectures verified: `linux/amd64, linux/arm64` (native smoke tests + Dive efficiency gate).
+- Upstream status: no new upstream release since previous build; refreshed base OS and dependencies.
+- Vulnerability gate: **0 fixable Critical/High** in Trivy and Grype (SBOM scan) (13 upstream-unfixed).
+- Published multi-arch digest (Docker Hub + GHCR): `dgcosenza/flame@sha256:91bd526dc3c1fa8050f9f293d7fbad64e9537a3cc61023df102f8303f45ff4b1` (Cosign OIDC signed + SPDX/CycloneDX SBOM + SLSA L3 provenance).
+
+---
+
 ## [2.1.0-0d6221d8] — 2026-11-25
 
 ### Automated Daily Build
