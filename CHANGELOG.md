@@ -20,8 +20,7 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). App
 - Architectures verified: `linux/amd64, linux/arm64` (native smoke tests + Dive efficiency gate).
 - Upstream status: no new upstream release since previous build; refreshed base OS and dependencies.
 - Vulnerability gate: **0 fixable Critical/High** in Trivy and Grype (SBOM scan) (13 upstream-unfixed).
-- Published multi-arch digest (Docker Hub + GHCR): `dgcosenza/flame@sha256:91bd526dc3c1fa8050f9f293d7fbad64e9537a3cc61023df102f8303f45ff4b1` (Cosign OIDC signed + SPDX/CycloneDX SBOM + SLSA L3 provenance).
-
+- Published multi-arch digest (Docker Hub + GHCR): `dgcosenza/flame@sha256:405fc87f804efb0c271439acce4a8d363742b25b832a613018c818fdf882e2bb` (Cosign OIDC signed + SPDX/CycloneDX SBOM + SLSA L3 provenance).
 ---
 
 ## [2.1.0-0d6221d8] — 2026-11-25
