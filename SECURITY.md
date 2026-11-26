@@ -10,8 +10,8 @@ Only the latest daily build of `dgcosenza/flame` on Debian 13 (`trixie-slim`) + 
 
 Every build in GitHub Actions enforces:
 - `npm audit --audit-level=low` = **0 vulnerabilities** on both client and production server dependencies.
-- **Trivy** (`--ignore-unfixed`, severity `CRITICAL,HIGH`) hard gate + full report artifact + SARIF upload to GitHub Code Scanning.
-- **Grype** (`--only-fixed`, severity cutoff `high`) hard gate + report artifact.
+- **Trivy** (`--ignore-unfixed`, all severities `UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL`) hard gate + full report artifact + SARIF upload to GitHub Code Scanning.
+- **Grype** (`--only-fixed --fail-on negligible`, all severities) hard gate + report artifact.
 - **Syft** SPDX SBOM artifact generation.
 
 Daily scheduled builds run with `--no-cache` and upgrade all Debian 13 packages at build time.

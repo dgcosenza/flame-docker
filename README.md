@@ -327,7 +327,7 @@ Build arguments (`NODE_VERSION`, `FLAME_REPO`, `FLAME_VERSION`, `FLAME_COMMIT`, 
 
 1. **Upstream check** of the latest Node.js LTS (`trixie-slim`) and `AlexStapleton/Flame-Revamped`, compared against `versions.json`.
 2. **No-cache rebuild** with `apt-get upgrade`, fresh npm dependencies, a rebuilt frontend and the full test suite.
-3. **Vulnerability gate:** `npm audit` = 0, Trivy and Grype block on any fixable High/Critical finding; reports are retained for 90 days.
+3. **Vulnerability gate:** `npm audit` = 0, Trivy and Grype block on any fixable vulnerability of any severity; reports are retained for 90 days.
 4. **Smoke test** ([`tests/smoke.sh`](https://github.com/dgcosenza/flame-docker/blob/main/tests/smoke.sh)): non-root startup, `/` and `/health`, healthcheck pass and fail paths, `0600` on `data/.secret`.
 5. **Publish** of the tags listed in [Tags and Versioning Policy](#tags-and-versioning-policy) to Docker Hub and GHCR, signed and attested.
 6. **Automated documentation sync** of `versions.json`, the *Current Versions* block, the dated `CHANGELOG.md` entry and the Docker Hub overview.
