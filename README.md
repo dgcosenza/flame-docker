@@ -1,16 +1,33 @@
 # Flame — Hardened Debian 13 (trixie) / Node.js LTS Image
 
-[![Daily Build, Scan, and Publish](https://github.com/dgcosenza/flame-docker/actions/workflows/daily.yml/badge.svg)](https://github.com/dgcosenza/flame-docker/actions/workflows/daily.yml)
-[![Packaging License: MIT](https://img.shields.io/badge/packaging-MIT-blue.svg)](https://github.com/dgcosenza/flame-docker/blob/main/LICENSE)
-[![Upstream License: MIT](https://img.shields.io/badge/upstream-MIT-green.svg)](https://github.com/AlexStapleton/Flame-Revamped/blob/main/LICENSE)
-[![Signed with Cosign](https://img.shields.io/badge/signed-cosign%20OIDC-blueviolet.svg)](#supply-chain-verification)
-[![SLSA Level 3](https://img.shields.io/badge/SLSA-Level%203-brightgreen.svg)](#supply-chain-verification)
-[![Architectures](https://img.shields.io/badge/arch-amd64%20%7C%20arm64-informational.svg)](#supported-architectures)
+[![Daily CI](https://github.com/dgcosenza/flame-docker/actions/workflows/daily.yml/badge.svg)](https://github.com/dgcosenza/flame-docker/actions/workflows/daily.yml)
+[![OpenSSF Scorecard Workflow](https://github.com/dgcosenza/flame-docker/actions/workflows/scorecard.yml/badge.svg)](https://github.com/dgcosenza/flame-docker/actions/workflows/scorecard.yml)
+[![Gitleaks Secret Scan](https://github.com/dgcosenza/flame-docker/actions/workflows/gitleaks.yml/badge.svg)](https://github.com/dgcosenza/flame-docker/actions/workflows/gitleaks.yml)
+[![Public Content Check](https://github.com/dgcosenza/flame-docker/actions/workflows/public-check.yml/badge.svg)](https://github.com/dgcosenza/flame-docker/actions/workflows/public-check.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/dgcosenza/flame-docker/badge)](https://scorecard.dev/viewer/?uri=github.com/dgcosenza/flame-docker)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/17158/badge)](https://www.bestpractices.dev/projects/17158)
-[![Docker Pulls](https://img.shields.io/docker/pulls/dgcosenza/flame)](https://hub.docker.com/r/dgcosenza/flame)
-[![Docker Image Size](https://img.shields.io/docker/image-size/dgcosenza/flame/latest)](https://hub.docker.com/r/dgcosenza/flame)
-[![Latest Release](https://img.shields.io/github/v/release/dgcosenza/flame-docker?label=version)](https://github.com/dgcosenza/flame-docker/releases)
+
+[![Trivy + Grype: 0 Fixable CVEs](https://img.shields.io/badge/Trivy%20%2B%20Grype-0%20fixable%20CVEs-brightgreen?logo=trivy&logoColor=white)](https://github.com/dgcosenza/flame-docker/security/code-scanning)
+[![Signed: Cosign OIDC](https://img.shields.io/badge/signed-Cosign%20OIDC-blueviolet)](https://github.com/dgcosenza/flame-docker#supply-chain-verification)
+[![SLSA Build L3](https://img.shields.io/badge/SLSA-Build%20L3-brightgreen)](https://github.com/dgcosenza/flame-docker/attestations)
+[![SBOM: SPDX + CycloneDX](https://img.shields.io/badge/SBOM-SPDX%20%2B%20CycloneDX-0A7BBB?logo=spdx&logoColor=white)](https://github.com/dgcosenza/flame-docker/releases/latest)
+[![Base OS](https://img.shields.io/badge/base-Debian%2013%20(trixie--slim)-A81D33?logo=debian&logoColor=white)](https://github.com/dgcosenza/flame-docker/blob/main/Dockerfile)
+[![Architectures](https://img.shields.io/badge/arch-amd64%20%7C%20arm64-007ec6?logo=linux&logoColor=white)](https://github.com/dgcosenza/flame-docker#supported-architectures)
+[![Healthcheck: CI Verified](https://img.shields.io/badge/healthcheck-CI%20verified-brightgreen?logo=docker&logoColor=white)](https://github.com/dgcosenza/flame-docker#healthcheck)
+[![Renovate Enabled](https://img.shields.io/badge/renovate-enabled-1A1F6C?logo=renovate&logoColor=white)](https://github.com/dgcosenza/flame-docker/blob/main/renovate.json)
+[![Dependabot Enabled](https://img.shields.io/badge/dependabot-enabled-025E8C?logo=dependabot&logoColor=white)](https://github.com/dgcosenza/flame-docker/blob/main/.github/dependabot.yml)
+[![Daily Rebuilds](https://img.shields.io/badge/rebuilds-daily-2088FF?logo=githubactions&logoColor=white)](https://github.com/dgcosenza/flame-docker/actions/workflows/daily.yml)
+
+[![Latest Release](https://img.shields.io/github/v/release/dgcosenza/flame-docker?label=version&logo=github)](https://github.com/dgcosenza/flame-docker/releases/latest)
+[![Release Date](https://img.shields.io/github/release-date/dgcosenza/flame-docker?label=released&logo=github)](https://github.com/dgcosenza/flame-docker/releases/latest)
+[![Last Commit](https://img.shields.io/github/last-commit/dgcosenza/flame-docker?logo=github)](https://github.com/dgcosenza/flame-docker/commits/main)
+[![Docker Pulls](https://img.shields.io/docker/pulls/dgcosenza/flame?logo=docker&logoColor=white)](https://hub.docker.com/r/dgcosenza/flame)
+[![Docker Image Size](https://img.shields.io/docker/image-size/dgcosenza/flame/latest?logo=docker&logoColor=white)](https://hub.docker.com/r/dgcosenza/flame)
+[![Registries: Docker Hub + GHCR](https://img.shields.io/badge/registries-Docker%20Hub%20%2B%20GHCR-2496ED?logo=docker&logoColor=white)](https://github.com/dgcosenza/flame-docker/pkgs/container/flame)
+[![Packaging License: MIT](https://img.shields.io/badge/packaging-MIT-blue?logo=opensourceinitiative&logoColor=white)](https://github.com/dgcosenza/flame-docker/blob/main/LICENSE)
+[![Upstream License](https://img.shields.io/badge/upstream-MIT-green?logo=opensourceinitiative&logoColor=white)](https://github.com/AlexStapleton/Flame-Revamped/blob/main/LICENSE)
+[![GitHub Issues](https://img.shields.io/github/issues/dgcosenza/flame-docker?logo=github)](https://github.com/dgcosenza/flame-docker/issues)
+[![FNX Labs Catalog](https://img.shields.io/badge/catalog-FNX%20Labs-0b1020?logo=githubpages&logoColor=white)](https://dgcosenza.github.io/)
 
 A hardened, actively maintained container image for **Flame** (self-hosted startpage and dashboard), built on **Debian 13 (trixie)** and the **latest active Node.js LTS** runtime, maintained by **Daniel G. Cosenza from FNX Labs**.
 
@@ -20,13 +37,10 @@ A hardened, actively maintained container image for **Flame** (self-hosted start
 - **Upstream Application:** [`AlexStapleton/Flame-Revamped`](https://github.com/AlexStapleton/Flame-Revamped) `v2.1.0` (fork of [`pawelmalak/flame`](https://github.com/pawelmalak/flame))
 - **License:** MIT
 
----
 
 ## Overview
 
-The official [`pawelmalak/flame`](https://github.com/pawelmalak/flame) `v2.4.0` image ships end-of-life Node.js 20 on Alpine alongside outdated dependencies (deprecated `react-scripts` 5, legacy `multer` 1.x, `axios` 0.24, `jsonwebtoken` 8.x, `express` 4.17) and unpatched application security issues.
-
-`dgcosenza/flame`, maintained by **Daniel G. Cosenza from FNX Labs**, provides a drop-in, production-hardened Flame image on **Debian 13 (trixie)** + **Node.js 26 LTS (*Lithium*)**:
+`dgcosenza/flame`, maintained by **Daniel G. Cosenza from FNX Labs**, replaces the legacy `pawelmalak/flame` (`v2.4.0` / EOL Node 20) image with a drop-in, hardened build on **Debian 13 (`trixie-slim`)** + **Node.js 26 LTS**:
 
 - **Maintained application base:** Built from a commit-pinned checkout of [`AlexStapleton/Flame-Revamped`](https://github.com/AlexStapleton/Flame-Revamped) (`v2.1.0`, commit `0d6221d8`), modernizing Flame to **Express 5**, **Sequelize 6**, **sqlite3 6** (bundled SQLite 3.52), **React 19**, **Vite 8**, and **TypeScript 7** with 250+ automated tests and XSS/CSP/auth hardening while preserving the classic Flame layout and SQLite data model.
 - **Current OS and runtime:** Based on official `node:<LTS>-trixie-slim` (latest Debian 13 point release, 13.8 as of 2026-11-24), upgraded via `apt-get update && apt-get -y upgrade` at build time, with native `sqlite3` compiled from source against Debian 13 glibc and Node 26.
@@ -36,7 +50,6 @@ The official [`pawelmalak/flame`](https://github.com/pawelmalak/flame) `v2.4.0` 
   2. `02-dot-secret-compat.patch` — Preserves `pawelmalak/flame`'s `data/.secret` (with fallback to `Flame-Revamped`'s `data/secret.key`) and writes newly generated secret files with mode `0600`.
   3. `03-mass-assignment-allowlists.patch` — Enforces explicit field allowlists in app, bookmark, and category create/update controllers (mitigating CWE-915).
 
----
 
 ## Current Versions
 
@@ -55,7 +68,6 @@ The official [`pawelmalak/flame`](https://github.com/pawelmalak/flame) `v2.4.0` 
 | Security gate (Trivy + Grype on SBOM) | **0 fixable findings of any severity** (13 upstream-unfixed) |
 <!-- versions:end -->
 
----
 
 ## Tags and Versioning Policy
 
@@ -74,19 +86,16 @@ The official [`pawelmalak/flame`](https://github.com/pawelmalak/flame) `v2.4.0` 
 image: dgcosenza/flame:latest@sha256:<digest>
 ```
 
-Images publish `org.opencontainers.image.version` (e.g. `2.1.0`) so digest-checking and major-version-guarded promotion scripts can adopt Debian/Node security rebuilds cleanly while holding major upgrades for manual review.
 
----
 
 ## Supported Architectures
 
 | Architecture | Status | Verification |
 | --- | --- | --- |
-| `linux/amd64` | **Published & natively tested** | Built, smoke-tested, Dive-gated, Syft/Trivy/Grype-scanned, and Cosign-signed on native x86_64 CI runners. |
-| `linux/arm64` | **Published & natively tested** | Built, smoke-tested, Dive-gated, Syft/Trivy/Grype-scanned, and Cosign-signed on native ARM64 CI runners. |
+| `linux/amd64` | **Published & natively tested** | Native x86_64 build, smoke, Dive, Trivy/Grype, Cosign, SLSA L3. |
+| `linux/arm64` | **Published & natively tested** | Native ARM64 build, smoke, Dive, Trivy/Grype, Cosign, SLSA L3. |
 
 Identical multi-arch OCI manifest digests are published to **Docker Hub** and **GHCR** (`ghcr.io/dgcosenza/*`), accompanied by automated signed [GitHub Releases](https://github.com/dgcosenza/flame-docker/releases).
----
 
 ## Quick Start
 
@@ -99,23 +108,14 @@ printf '%s\n' 'replace-with-a-strong-unique-password' > ./secrets/password
 chmod 600 ./secrets/password
 ```
 
-### `docker run` (LAN-only bind)
-
 ```bash
-docker run -d \
-  --name flame \
-  --restart unless-stopped \
-  --security-opt no-new-privileges:true \
-  -p 192.0.2.10:5005:5005 \
-  -e PASSWORD_FILE=/run/secrets/password \
-  -v "$(pwd)/data:/app/data" \
-  -v "$(pwd)/secrets/password:/run/secrets/password:ro" \
-  --cpus 1.00 \
-  --memory 256m \
-  dgcosenza/flame:latest
+docker run -d --name flame --restart unless-stopped --security-opt no-new-privileges:true \
+  -p 192.0.2.10:5005:5005 -e PASSWORD_FILE=/run/secrets/password \
+  -v "$(pwd)/data:/app/data" -v "$(pwd)/secrets/password:/run/secrets/password:ro" \
+  --cpus 1.00 --memory 256m dgcosenza/flame:latest
 ```
 
-Open `http://192.0.2.10:5005/`, click the gear icon (bottom-left), go to **App**, and log in using the password in `./secrets/password`.
+Open `http://192.0.2.10:5005/`, click the gear icon -> **App**, and sign in with `./secrets/password`.
 
 ### Docker Compose (recommended)
 
@@ -161,7 +161,6 @@ secrets:
     file: ./secrets/password
 ```
 
----
 
 ## Environment Variables
 
@@ -182,19 +181,11 @@ At startup, `/run/secrets/*` files are loaded into uppercase environment variabl
 
 *\*At least one of `PASSWORD`, `PASSWORD_FILE`, or `/run/secrets/password` is required.*
 
----
 
 ## Ports and Network Exposure
 
-> Examples use `192.0.2.10` (an RFC 5737 documentation address) as the host LAN IP; replace it with your own.
+Flame listens on **`5005/tcp`** (UI, `/api/*`, `/health`, `/socket`). Bind to a private LAN interface (e.g. `192.0.2.10:5005:5005`, RFC 5737 example) or `127.0.0.1:5005:5005` behind a reverse proxy; avoid unfirewalled `5005:5005`.
 
-Flame listens on container port **`5005/tcp`** (HTTP UI, REST API `/api/*`, `/health`, and WebSocket `/socket`).
-
-- **LAN-only bind (recommended):** `"192.0.2.10:5005:5005"` — accepts traffic solely on the host's LAN interface (rejects `127.0.0.1`, VPN, and WAN).
-- **Localhost-only (behind a same-host reverse proxy):** `"127.0.0.1:5005:5005"`.
-- **All interfaces:** `"5005:5005"` — use only with an explicit host firewall.
-
----
 
 ## Volumes and Data Layout
 
@@ -222,17 +213,11 @@ chown -R 1000:1000 /path/to/flame/data
 chmod 600 /path/to/flame/data/.secret
 ```
 
----
 
 ## Configuration
 
-All settings are managed in the web UI (**Settings**, bottom-left gear icon):
+Manage apps, categories, bookmarks, themes, search providers, and widgets in **Settings** (bottom-left gear icon). Public items are guest-visible; private items, write endpoints, and integration secrets (`WEATHER_API_KEY`, `PIHOLE_SECRETS`, `CALENDAR_SECRETS`) require admin login.
 
-- **Database (`data/db.sqlite`):** Applications, categories, bookmarks, pin flags, ordering, guest visibility (`isPublic`), optional per-app HTTP status checks, and cached weather.
-- **Files (`data/`):** `config.json` (title, theme, search providers, layout width/columns defaulting to 75% / 4×4 matching classic Flame, Docker/Kubernetes sync, optional Weather/Pi-hole/Calendar widgets), `themes.json`, `customQueries.json`, and `flame.css`.
-- **Guest vs. Admin access:** Public apps/categories/bookmarks are visible without login. Private items, all write endpoints, Weather, Pi-hole, and (by default) Calendar require admin login. Unauthenticated `GET /api/config` masks `WEATHER_API_KEY`, coordinates, `PIHOLE_SECRETS`, and `CALENDAR_SECRETS`.
-
----
 
 ## Upgrading and Migrating from `pawelmalak/flame`
 
@@ -246,13 +231,11 @@ Key points (full step-by-step cutover, verification and rollback in [`docs/MIGRA
 - Pin by digest and recreate only the `flame` service.
 - Expect a one-time re-login (legacy JWTs lack the `pwf` claim).
 
----
 
 ## Backup and Restore
 
-SQLite runs in WAL mode, so stop the container briefly before archiving `/app/data` (`docker compose stop flame`, archive `data/` with `tar --numeric-owner`, then start it again). The built-in GUI backup excludes secrets (`data/.secret`, `PASSWORD`, API keys); use filesystem backups for complete recovery. Exact commands for backup and restore: [`docs/BACKUP-RESTORE.md`](https://github.com/dgcosenza/flame-docker/blob/main/docs/BACKUP-RESTORE.md).
+Stop `flame` briefly before archiving `/app/data` (SQLite WAL mode) with `tar --numeric-owner`. GUI backups exclude secrets; use filesystem backups for full recovery ([`docs/BACKUP-RESTORE.md`](https://github.com/dgcosenza/flame-docker/blob/main/docs/BACKUP-RESTORE.md)).
 
----
 
 ## Supply-Chain Verification
 
@@ -266,11 +249,7 @@ cosign verify \
   --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
   ghcr.io/dgcosenza/flame:latest
 
-# Or against Docker Hub (identical digest):
-cosign verify \
-  --certificate-identity-regexp="^https://github\.com/dgcosenza/flame-docker/\.github/workflows/daily\.yml@refs/heads/main$" \
-  --certificate-oidc-issuer="https://token.actions.githubusercontent.com" \
-  dgcosenza/flame:latest
+# Identical digest on Docker Hub: replace ghcr.io/dgcosenza/flame:latest with dgcosenza/flame:latest
 ```
 
 ### Verify SPDX / CycloneDX SBOM attestations and SLSA Build Provenance
@@ -285,7 +264,6 @@ cosign verify-attestation \
 gh attestation verify oci://ghcr.io/dgcosenza/flame:latest --owner dgcosenza
 ```
 
----
 
 ## Security Notes
 
@@ -297,7 +275,6 @@ gh attestation verify oci://ghcr.io/dgcosenza/flame:latest --owner dgcosenza
 - **LAN-only posture:** Because public dashboard items are unauthenticated by design, keep Flame bound to a private LAN interface rather than exposed on the public internet.
 - **Audit & CVE gate (all severities with a fix):** Builds fail on any `npm audit --audit-level=low` finding (>0), any **Trivy** fixable finding of any severity (`--ignore-unfixed`), or any **Grype** fixable finding of any severity (`--only-fixed`). Current status: **0 fixable vulnerabilities of any severity**. Trivy SARIF results are uploaded to GitHub Code Scanning, full Trivy/Grype reports and an **SPDX SBOM** are persisted as CI artifacts, and any upstream-unfixed Debian 13 advisories are cleared automatically by daily rebuilds once Debian Security publishes fixes. See [`SECURITY.md`](https://github.com/dgcosenza/flame-docker/blob/main/SECURITY.md).
 
----
 
 ## Healthcheck
 
@@ -308,7 +285,6 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 
 `/app/healthcheck.js` sends an HTTP `GET` to `http://127.0.0.1:${PORT}/health` (5 s timeout) and exits `0` only on HTTP `200` with `{"status":"healthy"}`. `/health` validates both `data/config.json` accessibility and a live SQLite `SELECT 1` query (2 s timeout). Three consecutive failures mark the container `unhealthy`, signalling a process crash, port binding fault, missing config, or unreachable/corrupt SQLite database.
 
----
 
 ## Building from Source
 
@@ -320,31 +296,18 @@ docker buildx build --platform linux/amd64 --load -t dgcosenza/flame:local .
 
 Build arguments (`NODE_VERSION`, `FLAME_REPO`, `FLAME_VERSION`, `FLAME_COMMIT`, `IMAGE_*`) and the four-stage build are documented in [`docs/BUILD.md`](https://github.com/dgcosenza/flame-docker/blob/main/docs/BUILD.md).
 
----
 
 ## Update Policy
 
-[`.github/workflows/daily.yml`](https://github.com/dgcosenza/flame-docker/blob/main/.github/workflows/daily.yml) runs every day at **04:17 UTC**, on pushes to `main`, on pull requests (verification only, no publishing) and via `workflow_dispatch`. Each scheduled run is a fully automated seven-step pipeline, gated by `.github/workflows/public-check.yml`:
+[`.github/workflows/daily.yml`](https://github.com/dgcosenza/flame-docker/blob/main/.github/workflows/daily.yml) runs daily at **04:17 UTC**, on `main` pushes, PRs, and `workflow_dispatch`: resolves Node LTS + `Flame-Revamped`, rebuilds `--no-cache`, enforces `npm audit` + Trivy + Grype (0 fixable CVEs of any severity) + Dive + [`tests/smoke.sh`](https://github.com/dgcosenza/flame-docker/blob/main/tests/smoke.sh), publishes Cosign-signed SLSA L3 digests to Docker Hub, GHCR, and configured secondary registries, syncs `versions.json`/`README.md`/`CHANGELOG.md`/Hub overview, and manages a single `ci-failure` issue ([`docs/UPDATE-POLICY.md`](https://github.com/dgcosenza/flame-docker/blob/main/docs/UPDATE-POLICY.md)). Pin deployments by `@sha256` digest.
 
-1. **Upstream check** of the latest Node.js LTS (`trixie-slim`) and `AlexStapleton/Flame-Revamped`, compared against `versions.json`.
-2. **No-cache rebuild** with `apt-get upgrade`, fresh npm dependencies, a rebuilt frontend and the full test suite.
-3. **Vulnerability gate:** `npm audit` = 0, Trivy and Grype block on any fixable vulnerability of any severity; reports are retained for 90 days.
-4. **Smoke test** ([`tests/smoke.sh`](https://github.com/dgcosenza/flame-docker/blob/main/tests/smoke.sh)): non-root startup, `/` and `/health`, healthcheck pass and fail paths, `0600` on `data/.secret`.
-5. **Publish** of the tags listed in [Tags and Versioning Policy](#tags-and-versioning-policy) to Docker Hub and GHCR, signed and attested.
-6. **Automated documentation sync** of `versions.json`, the *Current Versions* block, the dated `CHANGELOG.md` entry and the Docker Hub overview.
-7. **Failure alerting** through a single `ci-failure` GitHub issue, closed automatically on the next green run.
-
-Details of every step and the deployment-pickup guidance: [`docs/UPDATE-POLICY.md`](https://github.com/dgcosenza/flame-docker/blob/main/docs/UPDATE-POLICY.md). Pin deployments by digest and promote new digests only after verifying the healthcheck; avoid unpinned `:latest` pulls and automatic updaters.
-
----
 
 ## Design Decisions
 
-- **Debian 13 (`trixie-slim`) + Node.js LTS:** Uses official `node:<LTS>-trixie-slim` with `apt-get upgrade` at build time rather than Alpine/musl so native `sqlite3` compiles cleanly against Debian 13 glibc and tracks Debian Security advisories.
-- **Node.js dependency-free healthcheck:** `/app/healthcheck.js` uses Node's built-in `http` module, eliminating `curl`/`wget` from the runtime layer.
-- **Minimal, read-only runtime:** Compilers, `git`, `npm`, `npx`, `corepack`, and `yarn` are removed from the runtime image while `package-lock.json` is retained for accurate scanner visibility.
+- **Debian 13 (`trixie-slim`) + Node LTS:** Clean native `sqlite3` glibc builds tracking Debian Security advisories.
+- **Dependency-free Node healthcheck:** Built-in `http` module eliminates `curl`/`wget` from runtime.
+- **Minimal runtime:** Excludes compilers, `git`, `npm`, `corepack`, and `yarn` while keeping `package-lock.json` for transparent scanning.
 
----
 
 ## Troubleshooting
 
@@ -354,13 +317,7 @@ Details of every step and the deployment-pickup guidance: [`docs/UPDATE-POLICY.m
 
 More cases (logout after upgrade, CSP, rate limiter behind a proxy, WAL backups): [`docs/TROUBLESHOOTING.md`](https://github.com/dgcosenza/flame-docker/blob/main/docs/TROUBLESHOOTING.md).
 
----
 
-## Changelog
-
-See [`CHANGELOG.md`](https://github.com/dgcosenza/flame-docker/blob/main/CHANGELOG.md).
-
----
 
 ## License
 

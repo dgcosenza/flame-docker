@@ -1,1 +1,1 @@
-Hardened Debian 13 (trixie) + Node LTS image for Flame startpage (non-root, 0 npm audit CVEs).
+Hardened Debian 13 (trixie) + Node LTS Flame startpage image (non-root, 0 fixable CVEs).
