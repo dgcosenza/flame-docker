@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-ARG NODE_BASE=node:26.13.1-trixie-slim@sha256:abe7e5a82b61a8ef67b315b85497c9e65173387ccf2f4a029248184b8e020be
+ARG NODE_BASE=node:26.13.1-trixie-slim@sha256:abe7e5a82b61a8ef67b315b85497c9e65173387ccf2f4a029248184b8e020be5
 ARG NODE_VERSION=26.13.1
 ARG FLAME_REPO=https://github.com/AlexStapleton/Flame-Revamped.git
 ARG FLAME_VERSION=2.1.0
