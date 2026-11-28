@@ -61,9 +61,9 @@ A hardened, actively maintained container image for **Flame** (self-hosted start
 | Base OS | `Debian 13.8 (trixie-slim)` |
 | Architectures | `linux/amd64, linux/arm64` |
 | Uncompressed size (per arch) | `amd64: 114.2 MB, arm64: 411.6 MB` |
-| Last verified build (UTC) | `2026-11-27` |
-| Published multi-arch digest | `dgcosenza/flame@sha256:3877563a5deff8a81a6e62eee69a95121bf9e0ac2fe156ec4150fe8ef13cf586` |
-| GHCR mirror | `ghcr.io/dgcosenza/flame@sha256:3877563a5deff8a81a6e62eee69a95121bf9e0ac2fe156ec4150fe8ef13cf586` |
+| Last verified build (UTC) | `2026-11-28` |
+| Published multi-arch digest | `dgcosenza/flame@sha256:7f6ff2e3b4621c7f258af0487bc28280d018b5d0a2a8382f4733285811004e5e` |
+| GHCR mirror | `ghcr.io/dgcosenza/flame@sha256:7f6ff2e3b4621c7f258af0487bc28280d018b5d0a2a8382f4733285811004e5e` |
 | Supply chain | Cosign OIDC signed + SPDX & CycloneDX SBOM attestations + SLSA Build L3 provenance |
 | Security gate (Trivy + Grype on SBOM) | **0 fixable findings of any severity** (13 upstream-unfixed) |
 <!-- versions:end -->
